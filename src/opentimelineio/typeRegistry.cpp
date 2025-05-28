@@ -25,6 +25,7 @@
 #include "opentimelineio/timeEffect.h"
 #include "opentimelineio/timeline.h"
 #include "opentimelineio/track.h"
+#include "opentimelineio/transformEffects.h"
 #include "opentimelineio/transition.h"
 #include "opentimelineio/unknownSchema.h"
 #include "stringUtils.h"
@@ -86,6 +87,12 @@ TypeRegistry::TypeRegistry()
     register_type<Timeline>();
     register_type<Track>();
     register_type_from_existing_type("Sequence", 1, "Track", nullptr);
+
+    register_type<VideoCrop>();
+    register_type<VideoScale>();
+    register_type<VideoPosition>();
+    register_type<VideoRotate>();
+
     register_type<Transition>();
 
     /*

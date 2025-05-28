@@ -17,6 +17,7 @@
 #include <rapidjson/writer.h>
 
 #include <fstream>
+#include <sstream>
 
 #if defined(_WINDOWS)
 #    ifndef WIN32_LEAN_AND_MEAN
@@ -72,6 +73,7 @@ public:
     virtual void write_value(uint64_t value)                         = 0;
     virtual void write_value(double value)                           = 0;
     virtual void write_value(std::string const& value)               = 0;
+    virtual void write_value(class Rational const& value)            = 0;
     virtual void write_value(class RationalTime const& value)        = 0;
     virtual void write_value(class TimeRange const& value)           = 0;
     virtual void write_value(class TimeTransform const& value)       = 0;
@@ -202,6 +204,13 @@ public:
         _store(std::any(value));
     }
     void write_value(double value) override { _store(std::any(value)); }
+
+    void write_value(Rational const& value) override
+    {
+        std::ostringstream oss;
+        oss << value;
+        write_value(oss.str());
+    }
 
     void write_value(RationalTime const& value) override
     {
@@ -531,6 +540,13 @@ public:
 
     void write_value(double value) { _writer.Double(value); }
 
+    void write_value(Rational const& value)
+    {
+        std::ostringstream oss;
+        oss << value;
+        write_value(oss.str());
+    }
+
     void write_value(RationalTime const& value)
     {
         _writer.StartObject();
@@ -687,6 +703,9 @@ SerializableObject::Writer::_build_dispatch_tables()
     };
     wt[&typeid(char const*)] = [this](std::any const& value) {
         _encoder.write_value(std::string(std::any_cast<char const*>(value)));
+    };
+    wt[&typeid(Rational)] = [this](std::any const& value) {
+        _encoder.write_value(std::any_cast<Rational const&>(value));
     };
     wt[&typeid(RationalTime)] = [this](std::any const& value) {
         _encoder.write_value(std::any_cast<RationalTime const&>(value));
@@ -884,6 +903,13 @@ SerializableObject::Writer::write(
 }
 
 void
+SerializableObject::Writer::write(std::string const& key, Rational value)
+{
+    _encoder_write_key(key);
+    _encoder.write_value(value);
+}
+
+void
 SerializableObject::Writer::write(std::string const& key, RationalTime value)
 {
     _encoder_write_key(key);
@@ -895,6 +921,15 @@ SerializableObject::Writer::write(std::string const& key, TimeRange value)
 {
     _encoder_write_key(key);
     _encoder.write_value(value);
+}
+
+void
+SerializableObject::Writer::write(
+    std::string const&          key,
+    std::optional<Rational> value)
+{
+    _encoder_write_key(key);
+    value ? _encoder.write_value(*value) : _encoder.write_null_value();
 }
 
 void
