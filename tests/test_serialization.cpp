@@ -6,6 +6,7 @@
 #include <opentimelineio/clip.h>
 #include <opentimelineio/timeline.h>
 #include <opentimelineio/track.h>
+#include <opentimelineio/transformEffects.h>
 #include <opentimelineio/serialization.h>
 #include <opentimelineio/serializableObject.h>
 #include <opentimelineio/serializableObjectWithMetadata.h>
@@ -13,6 +14,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace otime = opentime::OPENTIME_VERSION;
 namespace otio  = opentimelineio::OPENTIMELINEIO_VERSION;
@@ -26,6 +28,10 @@ main(int argc, char** argv)
         "success with default indent", [] {
         otio::SerializableObject::Retainer<otio::Clip> cl =
             new otio::Clip();
+
+        otio::SerializableObject::Retainer<otio::Effect> vs =
+            new otio::VideoScale("scale", otime::Rational(1920 / 2, 1920), otime::Rational(1280 / 2, 1280));
+        cl->effects().push_back(vs);
         otio::SerializableObject::Retainer<otio::Track> tr =
             new otio::Track();
         tr->append_child(cl);
@@ -64,7 +70,17 @@ main(int argc, char** argv)
                         "metadata": {},
                         "name": "",
                         "source_range": null,
-                        "effects": [],
+                        "effects": [
+                            {
+                                "OTIO_SCHEMA": "VideoScale.1",
+                                "metadata": {},
+                                "name": "scale",
+                                "effect_name": "VideoScale",
+                                "enabled": true,
+                                "width": "1/2",
+                                "height": "1/2"
+                            }
+                        ],
                         "markers": [],
                         "enabled": true,
                         "media_references": {

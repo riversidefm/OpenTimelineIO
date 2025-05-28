@@ -14,6 +14,8 @@
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/reader.h>
 
+#include <sstream>
+
 #if defined(_WINDOWS)
 #    ifndef WIN32_LEAN_AND_MEAN
 #        define WIN32_LEAN_AND_MEAN
@@ -712,6 +714,27 @@ SerializableObject::Reader::read(std::string const& key, std::string* value)
         value->clear();
     }
     return true;
+}
+
+bool
+SerializableObject::Reader::read(std::string const& key, Rational* value)
+{
+    std::string str;
+    if (_fetch(key, &str))
+    {
+        std::istringstream iss(str);
+        try {
+            iss >> *value;
+        }
+        catch (std::exception const& e) {
+            _error(ErrorStatus(
+                ErrorStatus::JSON_PARSE_ERROR,
+                e.what()));
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 bool
