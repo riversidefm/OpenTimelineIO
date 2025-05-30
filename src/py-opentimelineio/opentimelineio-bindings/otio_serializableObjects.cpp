@@ -25,6 +25,7 @@
 #include "opentimelineio/timeline.h"
 #include "opentimelineio/track.h"
 #include "opentimelineio/transition.h"
+#include "opentimelineio/transformEffects.h"
 #include "opentimelineio/serializableCollection.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/unknownSchema.h"
@@ -707,6 +708,66 @@ Instead it affects the speed of the media displayed within that item.
                     return new FreezeFrame(name, py_to_any_dictionary(metadata)); }),
             py::arg_v("name"_a = std::string()),
             py::arg_v("metadata"_a = py::none()));
+
+    py::class_<VideoScale, Effect, managing_ptr<VideoScale>>(m, "VideoScale", py::dynamic_attr(), R"docstring(
+    An effect that scales video by a given factor.
+    )docstring")
+        .def(py::init([](std::string name, Rational width, Rational height, py::object metadata) {
+                return new VideoScale(name, width, height, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "width"_a = Rational(1, 1),
+            "height"_a = Rational(1, 1),
+            "metadata"_a = py::none())
+        .def_property("width", &VideoScale::width, &VideoScale::set_width, "Width scaling factor. 1 means no scaling.")
+        .def_property("height", &VideoScale::height, &VideoScale::set_height, "Height scaling factor. 1 means no scaling.");
+
+    py::class_<VideoCrop, Effect, managing_ptr<VideoCrop>>(m, "VideoCrop", py::dynamic_attr(), R"docstring(
+    An effect that crops video by a given amount on each side.
+    The crop is as a fraction between -1 and 1, where -1 means the 
+    edge is at the left or top of the frame, 
+    and 1 means the right or bottom edge of the frame.
+    )docstring")
+        .def(py::init([](std::string name, Rational left, Rational right, Rational top, Rational bottom, py::object metadata) {
+                return new VideoCrop(name, left, right, top, bottom, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "left"_a = 0,
+            "right"_a = 0,
+            "top"_a = 0,
+            "bottom"_a = 0,
+            "metadata"_a = py::none())
+        .def_property("left", &VideoCrop::left, &VideoCrop::set_left)
+        .def_property("right", &VideoCrop::right, &VideoCrop::set_right)
+        .def_property("top", &VideoCrop::top, &VideoCrop::set_top)
+        .def_property("bottom", &VideoCrop::bottom, &VideoCrop::set_bottom);
+
+    py::class_<VideoPosition, Effect, managing_ptr<VideoPosition>>(m, "VideoPosition", py::dynamic_attr(), R"docstring(
+    An effect that moves the centre of the video by a given offset.
+    The offset is a fraction between -1 and 1, where -1 means the
+    left or top of the frame, and 1 means the right or bottom edge of the frame.
+    )docstring")
+        .def(py::init([](std::string name, Rational x, Rational y, py::object metadata) {
+                return new VideoPosition(name, x, y, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "x"_a = 0,
+            "y"_a = 0,
+            "metadata"_a = py::none())
+        .def_property("x", &VideoPosition::x, &VideoPosition::set_x)
+        .def_property("y", &VideoPosition::y, &VideoPosition::set_y);
+
+    py::class_<VideoRotate, Effect, managing_ptr<VideoRotate>>(m, "VideoRotate", py::dynamic_attr(), R"docstring(
+    An effect that rotates the video by a given amount.
+    0 is no rotation, 1 is full rotation.
+    )docstring")
+        .def(py::init([](std::string name, Rational rotation, py::object metadata) {
+                return new VideoRotate(name, rotation, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "rotation"_a = Rational(0, 1),
+            "metadata"_a = py::none())
+        .def_property("rotation", &VideoRotate::angle, &VideoRotate::set_angle);
 }
 
 static void define_media_references(py::module m) {

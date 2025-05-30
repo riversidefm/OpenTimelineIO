@@ -3,6 +3,7 @@
 
 pybind11_add_module(_opentime
                     opentime_bindings.cpp
+                    opentime_rational.cpp
                     opentime_rationalTime.cpp
                     opentime_timeRange.cpp
                     opentime_timeTransform.cpp

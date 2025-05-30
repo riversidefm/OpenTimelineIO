@@ -102,7 +102,7 @@ public:
     const Rational& right() const noexcept { return _right; }
     const Rational& top() const noexcept { return _top; }
     const Rational& bottom() const noexcept { return _bottom; }
-
+    
     void set_left(Rational const& left) noexcept { _left = left; }
     void set_right(Rational const& right) noexcept { _right = right; }
     void set_top(Rational const& top) noexcept { _top = top; }
