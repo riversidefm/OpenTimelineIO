@@ -8,7 +8,7 @@ pybind11_add_module(_opentime
                     opentime_timeTransform.cpp
                     opentime_bindings.h)
 
-target_include_directories(_opentime 
+target_include_directories(_opentime
     PRIVATE pybind11/include
     PRIVATE "${PROJECT_SOURCE_DIR}/src"
     PRIVATE "${PROJECT_SOURCE_DIR}/src/deps"
@@ -31,11 +31,11 @@ target_compile_options(_opentime PRIVATE
 )
 
 if(APPLE)
-    set_target_properties(_opentime PROPERTIES 
+    set_target_properties(_opentime PROPERTIES
         INSTALL_NAME_DIR "@loader_path"
         MACOSX_RPATH ON)
 elseif(UNIX)
-    set_target_properties(_opentime PROPERTIES 
+    set_target_properties(_opentime PROPERTIES
         INSTALL_RPATH "$ORIGIN"
         INSTALL_RPATH_USE_LINK_PATH OFF)
 endif()

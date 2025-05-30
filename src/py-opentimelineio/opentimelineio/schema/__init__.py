@@ -24,6 +24,10 @@ from .. _otio import (
     Track,
     Transition,
     V2d,
+    VideoCrop,
+    VideoPosition,
+    VideoRotate,
+    VideoScale,
 )
 
 MarkerColor = Marker.Color
@@ -74,5 +78,9 @@ __all__ = [
     'Transition',
     'SchemaDef',
     'timeline_from_clips',
-    'V2d'
+    'V2d',
+    'VideoCrop',
+    'VideoPosition',
+    'VideoRotate',
+    'VideoScale',
 ]

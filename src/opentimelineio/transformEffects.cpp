@@ -5,7 +5,8 @@ bool VideoScale::read_from(Reader &reader)
 {
     return reader.read("width", &_width)
            && reader.read("height", &_height)
-           && Parent::read_from(reader);}
+           && Parent::read_from(reader);
+}
 
 void VideoScale::write_to(Writer &writer) const {
     Parent::write_to(writer);

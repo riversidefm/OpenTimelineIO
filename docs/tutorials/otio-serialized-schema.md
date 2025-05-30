@@ -667,6 +667,93 @@ parameters:
 - *out_offset*: Amount of the next clip this transition overlaps, exclusive.
 - *transition_type*: Kind of transition, as defined by the :class:`Type` enum.
 
+### VideoCrop.1
+
+*full module path*: `opentimelineio.schema.VideoCrop`
+
+*documentation*:
+
+```
+
+An effect that crops video by a given amount on each side.
+The crop is specified as the distance from the centre of the video frame,
+where -1 means the left or top edge, and 1 means the right or bottom edge
+
+```
+
+parameters:
+- *bottom*: 
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *left*: 
+- *metadata*: 
+- *name*: 
+- *right*: 
+- *top*: 
+
+### VideoPosition.1
+
+*full module path*: `opentimelineio.schema.VideoPosition`
+
+*documentation*:
+
+```
+
+An effect that positions video by a given offset in the frame.
+The position specifies the offset of the centre of the frame,
+where -1 means the left or top edge, and 1 means the right or bottom edge.
+
+```
+
+parameters:
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *metadata*: 
+- *name*: 
+- *x*: 
+- *y*: 
+
+### VideoRotate.1
+
+*full module path*: `opentimelineio.schema.VideoRotate`
+
+*documentation*:
+
+```
+
+An effect that rotates video by a given angle in degrees.
+The rotation is specified as a fraction, where 0 means no rotation,
+and 1 means a full rotation.
+
+```
+
+parameters:
+- *angle*: Rotation angle in degrees. 0 means no rotation, 1 means 360 degrees.
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *metadata*: 
+- *name*: 
+
+### VideoScale.1
+
+*full module path*: `opentimelineio.schema.VideoScale`
+
+*documentation*:
+
+```
+
+An effect that scales video by a given factor.
+
+```
+
+parameters:
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *height*: Height scaling factor. 1 means no scaling.
+- *metadata*: 
+- *name*: 
+- *width*: Width scaling factor. 1 means no scaling.
+
 ### SchemaDef.1
 
 *full module path*: `opentimelineio.schema.SchemaDef`

@@ -5,6 +5,7 @@ set(_OTIO_HEADER_FILES
     otio_errorStatusHandler.h
     otio_anyDictionary.h
     otio_bindings.h
+    otio_rational.h
     otio_utils.h)
 
 pybind11_add_module(_otio
@@ -15,10 +16,10 @@ pybind11_add_module(_otio
                     otio_imath.cpp
                     otio_tests.cpp
                     otio_serializableObjects.cpp
-                    otio_utils.cpp 
+                    otio_utils.cpp
                     ${_OTIO_HEADER_FILES})
 
-target_include_directories(_otio 
+target_include_directories(_otio
     PRIVATE pybind11/include
     PRIVATE "${PROJECT_SOURCE_DIR}/src"
     PRIVATE "${PROJECT_SOURCE_DIR}/src/deps"
@@ -42,16 +43,16 @@ set_target_properties(_otio PROPERTIES
     DEBUG_POSTFIX "${OTIO_DEBUG_POSTFIX}")
 
 if(APPLE)
-    set_target_properties(_otio PROPERTIES 
+    set_target_properties(_otio PROPERTIES
         INSTALL_NAME_DIR "@loader_path"
         MACOSX_RPATH ON)
 elseif(UNIX)
-    set_target_properties(_otio PROPERTIES 
+    set_target_properties(_otio PROPERTIES
         INSTALL_RPATH "$ORIGIN"
         INSTALL_RPATH_USE_LINK_PATH OFF)
 endif()
 
-install(TARGETS _otio 
+install(TARGETS _otio
         ARCHIVE DESTINATION "${OTIO_RESOLVED_CXX_DYLIB_INSTALL_DIR}"
         LIBRARY DESTINATION "${OTIO_RESOLVED_CXX_DYLIB_INSTALL_DIR}"
         RUNTIME DESTINATION "${OTIO_RESOLVED_CXX_DYLIB_INSTALL_DIR}")

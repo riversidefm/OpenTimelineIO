@@ -280,6 +280,47 @@ parameters:
 - *out_offset*
 - *transition_type*
 
+### VideoCrop.1
+
+parameters:
+- *bottom*
+- *effect_name*
+- *enabled*
+- *left*
+- *metadata*
+- *name*
+- *right*
+- *top*
+
+### VideoPosition.1
+
+parameters:
+- *effect_name*
+- *enabled*
+- *metadata*
+- *name*
+- *x*
+- *y*
+
+### VideoRotate.1
+
+parameters:
+- *angle*
+- *effect_name*
+- *enabled*
+- *metadata*
+- *name*
+
+### VideoScale.1
+
+parameters:
+- *effect_name*
+- *enabled*
+- *height*
+- *metadata*
+- *name*
+- *width*
+
 ### SchemaDef.1
 
 parameters:

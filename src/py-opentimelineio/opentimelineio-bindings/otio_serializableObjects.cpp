@@ -5,6 +5,7 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include "otio_errorStatusHandler.h"
+#include "otio_rational.h"
 
 #include "opentimelineio/clip.h"
 #include "opentimelineio/composable.h"
@@ -24,11 +25,13 @@
 #include "opentimelineio/timeEffect.h"
 #include "opentimelineio/timeline.h"
 #include "opentimelineio/track.h"
+#include "opentimelineio/transformEffects.h"
 #include "opentimelineio/transition.h"
 #include "opentimelineio/serializableCollection.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/unknownSchema.h"
 
+#include "otio_rational.h"
 #include "otio_utils.h"
 #include "otio_anyDictionary.h"
 
@@ -440,14 +443,14 @@ Contains a :class:`.MediaReference` and a trim on that media reference.
              "effects"_a = py::none(),
              "markers"_a = py::none(),
              "active_media_reference"_a = std::string(Clip::default_media_key))
-        .def_property_readonly_static("DEFAULT_MEDIA_KEY",[](py::object /* self */) { 
-            return Clip::default_media_key; 
+        .def_property_readonly_static("DEFAULT_MEDIA_KEY",[](py::object /* self */) {
+            return Clip::default_media_key;
            })
         .def_property("media_reference", &Clip::media_reference, &Clip::set_media_reference)
-        .def_property("active_media_reference_key", &Clip::active_media_reference_key, [](Clip* clip, std::string const& new_active_key) { 
-            clip->set_active_media_reference_key(new_active_key, ErrorStatusHandler()); 
+        .def_property("active_media_reference_key", &Clip::active_media_reference_key, [](Clip* clip, std::string const& new_active_key) {
+            clip->set_active_media_reference_key(new_active_key, ErrorStatusHandler());
             })
-        .def("media_references", &Clip::media_references) 
+        .def("media_references", &Clip::media_references)
         .def("set_media_references", [](Clip* clip, Clip::MediaReferences const& media_references, std::string const& new_active_key) {
             clip->set_media_references(media_references, new_active_key, ErrorStatusHandler());
             });
@@ -707,6 +710,66 @@ Instead it affects the speed of the media displayed within that item.
                     return new FreezeFrame(name, py_to_any_dictionary(metadata)); }),
             py::arg_v("name"_a = std::string()),
             py::arg_v("metadata"_a = py::none()));
+
+    py::class_<VideoScale, Effect, managing_ptr<VideoScale>>(m, "VideoScale", py::dynamic_attr(), R"docstring(
+An effect that scales video by a given factor.
+)docstring")
+        .def(py::init([](std::string name, Rational width, Rational height, py::object metadata) {
+                return new VideoScale(name, width, height, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "width"_a = Rational(1, 1),
+            "height"_a = Rational(1, 1),
+            "metadata"_a = py::none())
+        .def_property("width", &VideoScale::width, &VideoScale::set_width, "Width scaling factor. 1 means no scaling.")
+        .def_property("height", &VideoScale::height, &VideoScale::set_height, "Height scaling factor. 1 means no scaling.");
+
+    py::class_<VideoCrop, Effect, managing_ptr<VideoCrop>>(m, "VideoCrop", py::dynamic_attr(), R"docstring(
+An effect that crops video by a given amount on each side.
+The crop is specified as the distance from the centre of the video frame,
+where -1 means the left or top edge, and 1 means the right or bottom edge
+)docstring")
+        .def(py::init([](std::string name, Rational left, Rational right, Rational top, Rational bottom, py::object metadata) {
+                return new VideoCrop(name, left, right, top, bottom, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "left"_a = -1,
+            "right"_a = 1,
+            "top"_a = -1,
+            "bottom"_a = 1,
+            "metadata"_a = py::none())
+        .def_property("left", &VideoCrop::left, &VideoCrop::set_left)
+        .def_property("right", &VideoCrop::right, &VideoCrop::set_right)
+        .def_property("top", &VideoCrop::top, &VideoCrop::set_top)
+        .def_property("bottom", &VideoCrop::bottom, &VideoCrop::set_bottom);
+
+    py::class_<VideoPosition, Effect, managing_ptr<VideoPosition>>(m, "VideoPosition", py::dynamic_attr(), R"docstring(
+An effect that positions video by a given offset in the frame.
+The position specifies the offset of the centre of the frame,
+where -1 means the left or top edge, and 1 means the right or bottom edge.
+)docstring")
+        .def(py::init([](std::string name, Rational x, Rational y, py::object metadata) {
+                return new VideoPosition(name, x, y, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "x"_a = 0,
+            "y"_a = 0,
+            "metadata"_a = py::none())
+        .def_property("x", &VideoPosition::x, &VideoPosition::set_x)
+        .def_property("y", &VideoPosition::y, &VideoPosition::set_y);
+
+    py::class_<VideoRotate, Effect, managing_ptr<VideoRotate>>(m, "VideoRotate", py::dynamic_attr(), R"docstring(
+An effect that rotates video by a given amount.
+The rotation is specified as a fraction, where 0 means no rotation,
+and 1 means a full rotation.
+)docstring")
+        .def(py::init([](std::string name, Rational rotation, py::object metadata) {
+                return new VideoRotate(name, rotation, py_to_any_dictionary(metadata));
+            }),
+            "name"_a = std::string(),
+            "rotation"_a = 0,
+            "metadata"_a = py::none())
+        .def_property("rotation", &VideoRotate::rotation, &VideoRotate::set_rotation, "Rotation amount. 0 means no rotation, 1 means 360 degrees.");
 }
 
 static void define_media_references(py::module m) {
@@ -723,7 +786,7 @@ static void define_media_references(py::module m) {
              "available_image_bounds"_a = std::nullopt)
 
         .def_property("available_range", &MediaReference::available_range, &MediaReference::set_available_range)
-        .def_property("available_image_bounds", &MediaReference::available_image_bounds, &MediaReference::set_available_image_bounds) 
+        .def_property("available_image_bounds", &MediaReference::available_image_bounds, &MediaReference::set_available_image_bounds)
         .def_property_readonly("is_missing_reference", &MediaReference::is_missing_reference);
 
     py::class_<GeneratorReference, MediaReference,
@@ -764,7 +827,7 @@ Note that a :class:`~MissingReference` may have useful metadata, even if the loc
                                   name,
                                   available_range,
                                   py_to_any_dictionary(metadata),
-                                  available_image_bounds); 
+                                  available_image_bounds);
                     }),
              py::arg_v("name"_a = std::string()),
              "available_range"_a = std::nullopt,
