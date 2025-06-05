@@ -274,6 +274,48 @@ parameters:
 
 ## Module: opentimelineio.schema
 
+### AudioFade.1
+
+*full module path*: `opentimelineio.schema.AudioFade`
+
+*documentation*:
+
+```
+
+An effect that defines an audio fade.
+If fade_in is true, audio is fading in from the start time for the duration
+If fade_in is false, the audio is fading out from the start time for the duration
+
+```
+
+parameters:
+- *duration*: Fade duration
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *fade_in*: Fade direction
+- *metadata*: 
+- *name*: 
+- *start_time*: Fade start time
+
+### AudioVolume.1
+
+*full module path*: `opentimelineio.schema.AudioVolume`
+
+*documentation*:
+
+```
+
+An effect that multiplies the audio volume by a given gain value
+
+```
+
+parameters:
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *gain*: Gain multiplier
+- *metadata*: 
+- *name*: 
+
 ### Clip.2
 
 *full module path*: `opentimelineio.schema.Clip`
@@ -721,18 +763,18 @@ parameters:
 
 ```
 
-An effect that rotates video by a given angle in degrees.
+An effect that rotates video by a given amount.
 The rotation is specified as a fraction, where 0 means no rotation,
 and 1 means a full rotation.
 
 ```
 
 parameters:
-- *angle*: Rotation angle in degrees. 0 means no rotation, 1 means 360 degrees.
 - *effect_name*: 
 - *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
 - *metadata*: 
 - *name*: 
+- *rotation*: Rotation amount. 0 means no rotation, 1 means 360 degrees.
 
 ### VideoScale.1
 

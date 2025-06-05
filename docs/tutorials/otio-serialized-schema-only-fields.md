@@ -128,6 +128,26 @@ parameters:
 
 ## Module: opentimelineio.schema
 
+### AudioFade.1
+
+parameters:
+- *duration*
+- *effect_name*
+- *enabled*
+- *fade_in*
+- *metadata*
+- *name*
+- *start_time*
+
+### AudioVolume.1
+
+parameters:
+- *effect_name*
+- *enabled*
+- *gain*
+- *metadata*
+- *name*
+
 ### Clip.2
 
 parameters:
@@ -305,11 +325,11 @@ parameters:
 ### VideoRotate.1
 
 parameters:
-- *angle*
 - *effect_name*
 - *enabled*
 - *metadata*
 - *name*
+- *rotation*
 
 ### VideoScale.1
 

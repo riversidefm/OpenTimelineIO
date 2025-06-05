@@ -37,9 +37,10 @@ set(OPENTIMELINEIO_HEADER_FILES
     typeRegistry.h
     unknownSchema.h
     vectorIndexing.h
-    version.h)
+    version.h
+    volumeEffects.h)
 
-add_library(opentimelineio ${OTIO_SHARED_OR_STATIC_LIB} 
+add_library(opentimelineio ${OTIO_SHARED_OR_STATIC_LIB}
     clip.cpp
     composable.cpp
     composition.cpp
@@ -73,7 +74,8 @@ add_library(opentimelineio ${OTIO_SHARED_OR_STATIC_LIB}
     transformEffects.cpp
     transition.cpp
     typeRegistry.cpp
-    unknownSchema.cpp 
+    unknownSchema.cpp
+    volumeEffects.cpp
     CORE_VERSION_MAP.cpp
     ${OPENTIMELINEIO_HEADER_FILES})
 
@@ -91,7 +93,7 @@ else()
 endif()
 
 
-target_link_libraries(opentimelineio 
+target_link_libraries(opentimelineio
     PUBLIC opentime Imath::Imath)
 
 set_target_properties(opentimelineio PROPERTIES
@@ -107,7 +109,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 if(APPLE)
-    set_target_properties(opentimelineio PROPERTIES 
+    set_target_properties(opentimelineio PROPERTIES
         INSTALL_NAME_DIR "@loader_path"
         MACOSX_RPATH ON)
 endif()
@@ -121,7 +123,7 @@ target_compile_options(opentimelineio PRIVATE
 )
 
 if(OTIO_CXX_INSTALL)
-    install(FILES ${OPENTIMELINEIO_HEADER_FILES} 
+    install(FILES ${OPENTIMELINEIO_HEADER_FILES}
             DESTINATION "${OTIO_RESOLVED_CXX_INSTALL_DIR}/include/opentimelineio")
 
     set(OPENTIMELINEIO_INCLUDES ${OTIO_RESOLVED_CXX_INSTALL_DIR}/include)

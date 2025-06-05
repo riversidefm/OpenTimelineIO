@@ -30,6 +30,7 @@
 #include "opentimelineio/serializableCollection.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/unknownSchema.h"
+#include "opentimelineio/volumeEffects.h"
 
 #include "otio_rational.h"
 #include "otio_utils.h"
@@ -770,6 +771,34 @@ and 1 means a full rotation.
             "rotation"_a = 0,
             "metadata"_a = py::none())
         .def_property("rotation", &VideoRotate::rotation, &VideoRotate::set_rotation, "Rotation amount. 0 means no rotation, 1 means 360 degrees.");
+
+    py::class_<AudioVolume, Effect, managing_ptr<AudioVolume>>(m, "AudioVolume", py::dynamic_attr(), R"docstring(
+An effect that multiplies the audio volume by a given gain value
+)docstring")
+        .def(py::init([](std::string name, double gain, py::object metadata) {
+            return new AudioVolume(name, gain, py_to_any_dictionary(metadata));
+        }),
+        "name"_a = std::string(),
+        "gain"_a = 1.0,
+        "metadata"_a = py::none())
+        .def_property("gain", &AudioVolume::gain, &AudioVolume::set_gain, "Gain multiplier");
+
+    py::class_<AudioFade, Effect, managing_ptr<AudioFade>>(m, "AudioFade", py::dynamic_attr(), R"docstring(
+An effect that defines an audio fade.
+If fade_in is true, audio is fading in from the start time for the duration
+If fade_in is false, the audio is fading out from the start time for the duration
+)docstring")
+        .def(py::init([](std::string name, bool fade_in, double start_time, double duration, py::object metadata) {
+            return new AudioFade(name, fade_in, start_time, duration, py_to_any_dictionary(metadata));
+        }),
+        "name"_a = std::string(),
+        "fade_in"_a = true,
+        "start_time"_a = 0,
+        "duration"_a = 0,
+        "metadata"_a = py::none())
+        .def_property("fade_in", &AudioFade::fade_in, &AudioFade::set_fade_in, "Fade direction")
+        .def_property("start_time", &AudioFade::start_time, &AudioFade::set_start_time, "Fade start time")
+        .def_property("duration", &AudioFade::duration, &AudioFade::set_duration, "Fade duration");
 }
 
 static void define_media_references(py::module m) {

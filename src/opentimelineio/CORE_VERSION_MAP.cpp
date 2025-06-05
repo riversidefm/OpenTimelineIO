@@ -145,6 +145,8 @@ const label_to_schema_version_map CORE_VERSION_MAP{
     { "0.18.0.dev1",
       {
           { "Adapter", 1 },
+          { "AudioFade", 1 },
+          { "AudioVolume", 1 },
           { "Clip", 2 },
           { "Composable", 1 },
           { "Composition", 1 },

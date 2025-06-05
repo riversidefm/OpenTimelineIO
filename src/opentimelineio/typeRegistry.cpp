@@ -28,6 +28,7 @@
 #include "opentimelineio/transformEffects.h"
 #include "opentimelineio/transition.h"
 #include "opentimelineio/unknownSchema.h"
+#include "opentimelineio/volumeEffects.h"
 #include "stringUtils.h"
 
 #include <assert.h>
@@ -54,6 +55,9 @@ TypeRegistry::TypeRegistry()
             return nullptr;
         },
         "UnknownSchema");
+
+    register_type<AudioVolume>();
+    register_type<AudioFade>();
 
     register_type<Clip>();
     register_type<Composable>();
