@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "opentime/rational.h"
 #include "opentime/rationalTime.h"
 #include "opentime/timeRange.h"
 #include "opentime/timeTransform.h"
@@ -123,7 +122,6 @@ public:
         bool read(std::string const& key, int* dest);
         bool read(std::string const& key, double* dest);
         bool read(std::string const& key, std::string* dest);
-        bool read(std::string const& key, Rational* dest);
         bool read(std::string const& key, RationalTime* dest);
         bool read(std::string const& key, TimeRange* dest);
         bool read(std::string const& key, class TimeTransform* dest);
@@ -136,7 +134,6 @@ public:
         bool read(std::string const& key, std::optional<bool>* dest);
         bool read(std::string const& key, std::optional<int>* dest);
         bool read(std::string const& key, std::optional<double>* dest);
-        bool read(std::string const& key, std::optional<Rational>* dest);
         bool read(std::string const& key, std::optional<RationalTime>* dest);
         bool read(std::string const& key, std::optional<TimeRange>* dest);
         bool read(std::string const& key, std::optional<TimeTransform>* dest);
@@ -450,12 +447,10 @@ public:
         void write(std::string const& key, int64_t value);
         void write(std::string const& key, double value);
         void write(std::string const& key, std::string const& value);
-        void write(std::string const& key, Rational value);
         void write(std::string const& key, RationalTime value);
         void write(std::string const& key, TimeRange value);
         void write(std::string const& key, IMATH_NAMESPACE::V2d value);
         void write(std::string const& key, IMATH_NAMESPACE::Box2d value);
-        void write(std::string const& key, std::optional<Rational> value);
         void write(std::string const& key, std::optional<RationalTime> value);
         void write(std::string const& key, std::optional<TimeRange> value);
         void write(

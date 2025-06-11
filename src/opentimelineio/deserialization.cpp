@@ -716,26 +716,6 @@ SerializableObject::Reader::read(std::string const& key, std::string* value)
     return true;
 }
 
-bool
-SerializableObject::Reader::read(std::string const& key, Rational* value)
-{
-    std::string str;
-    if (_fetch(key, &str))
-    {
-        std::istringstream iss(str);
-        try {
-            iss >> *value;
-        }
-        catch (std::exception const& e) {
-            _error(ErrorStatus(
-                ErrorStatus::JSON_PARSE_ERROR,
-                e.what()));
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
 
 bool
 SerializableObject::Reader::read(std::string const& key, RationalTime* value)

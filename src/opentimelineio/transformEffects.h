@@ -3,8 +3,6 @@
 #include "opentimelineio/effect.h"
 #include "opentimelineio/version.h"
 
-using opentime::Rational;
-
 namespace opentimelineio { namespace OPENTIMELINEIO_VERSION {
 
 /// @brief An scaling effect

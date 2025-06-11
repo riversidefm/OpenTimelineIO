@@ -5,14 +5,12 @@
 
 #define OPENTIMELINEIO_VERSION v1_0
 
-#include "opentime/rational.h"
 #include "opentime/rationalTime.h"
 #include "opentime/timeRange.h"
 #include "opentime/timeTransform.h"
 #include "opentime/version.h"
 
 namespace opentimelineio { namespace OPENTIMELINEIO_VERSION {
-using opentime::Rational;
 using opentime::RationalTime;
 using opentime::TimeRange;
 using opentime::TimeTransform;

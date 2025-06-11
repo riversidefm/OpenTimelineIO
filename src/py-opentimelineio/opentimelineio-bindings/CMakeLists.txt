@@ -5,7 +5,6 @@ set(_OTIO_HEADER_FILES
     otio_errorStatusHandler.h
     otio_anyDictionary.h
     otio_bindings.h
-    otio_rational.h
     otio_utils.h)
 
 pybind11_add_module(_otio

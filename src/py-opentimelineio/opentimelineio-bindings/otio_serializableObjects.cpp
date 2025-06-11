@@ -5,7 +5,6 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include "otio_errorStatusHandler.h"
-#include "otio_rational.h"
 
 #include "opentimelineio/clip.h"
 #include "opentimelineio/composable.h"
@@ -32,7 +31,6 @@
 #include "opentimelineio/unknownSchema.h"
 #include "opentimelineio/volumeEffects.h"
 
-#include "otio_rational.h"
 #include "otio_utils.h"
 #include "otio_anyDictionary.h"
 
