@@ -656,7 +656,7 @@ parameters:
 - *metadata*: 
 - *name*: 
 
-### Timeline.1
+### Timeline.2
 
 *full module path*: `opentimelineio.schema.Timeline`
 
@@ -667,6 +667,7 @@ None
 ```
 
 parameters:
+- *canvas_size*: 
 - *global_start_time*: 
 - *metadata*: 
 - *name*: 

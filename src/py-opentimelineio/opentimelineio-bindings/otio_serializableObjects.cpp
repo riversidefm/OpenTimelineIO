@@ -634,9 +634,10 @@ Should be subclassed (for example by :class:`.Track` and :class:`.Stack`), not u
         .def(py::init([](std::string name,
                          std::optional<std::vector<Composable*>> children,
                          std::optional<RationalTime> global_start_time,
+                         std::optional<IMATH_NAMESPACE::V2d> canvas_size,
                          py::object metadata) {
                           auto composable_children = vector_or_default<Composable>(children);
-                          Timeline* t = new Timeline(name, global_start_time,
+                          Timeline* t = new Timeline(name, global_start_time, canvas_size,
                                                      py_to_any_dictionary(metadata));
                           if (!composable_children.empty())
                               t->tracks()->set_children(composable_children, ErrorStatusHandler());
@@ -645,8 +646,10 @@ Should be subclassed (for example by :class:`.Track` and :class:`.Stack`), not u
              py::arg_v("name"_a = std::string()),
              "tracks"_a = py::none(),
              "global_start_time"_a = std::nullopt,
+             "canvas_size"_a = std::nullopt,
              py::arg_v("metadata"_a = py::none()))
         .def_property("global_start_time", &Timeline::global_start_time, &Timeline::set_global_start_time)
+        .def_property("canvas_size", &Timeline::canvas_size, &Timeline::set_canvas_size)
         .def_property("tracks", &Timeline::tracks, &Timeline::set_tracks)
         .def("duration", [](Timeline* t) {
                 return t->duration(ErrorStatusHandler());

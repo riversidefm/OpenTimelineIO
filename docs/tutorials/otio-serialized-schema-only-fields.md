@@ -272,9 +272,10 @@ parameters:
 - *metadata*
 - *name*
 
-### Timeline.1
+### Timeline.2
 
 parameters:
+- *canvas_size*
 - *global_start_time*
 - *metadata*
 - *name*

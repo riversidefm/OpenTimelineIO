@@ -171,7 +171,7 @@ const label_to_schema_version_map CORE_VERSION_MAP{
           { "Stack", 1 },
           { "Test", 1 },
           { "TimeEffect", 1 },
-          { "Timeline", 1 },
+          { "Timeline", 2 },
           { "Track", 1 },
           { "Transition", 1 },
           { "UnknownSchema", 1 },

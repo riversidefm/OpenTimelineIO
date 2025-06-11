@@ -140,6 +140,8 @@ public:
         bool read(std::string const& key, std::optional<RationalTime>* dest);
         bool read(std::string const& key, std::optional<TimeRange>* dest);
         bool read(std::string const& key, std::optional<TimeTransform>* dest);
+        bool read(std::string const&             key,
+            std::optional<IMATH_NAMESPACE::V2d>* value);
         bool read(
             std::string const&                     key,
             std::optional<IMATH_NAMESPACE::Box2d>* value);
@@ -456,6 +458,9 @@ public:
         void write(std::string const& key, std::optional<Rational> value);
         void write(std::string const& key, std::optional<RationalTime> value);
         void write(std::string const& key, std::optional<TimeRange> value);
+        void write(
+            std::string const&                  key,
+            std::optional<IMATH_NAMESPACE::V2d> value);
         void write(
             std::string const&                    key,
             std::optional<IMATH_NAMESPACE::Box2d> value);
