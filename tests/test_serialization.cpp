@@ -30,7 +30,7 @@ main(int argc, char** argv)
             new otio::Clip();
 
         otio::SerializableObject::Retainer<otio::Effect> vs =
-            new otio::VideoScale("scale", otime::Rational(1920 / 2, 1920), otime::Rational(1280 / 2, 1280));
+            new otio::VideoScale("scale", 1920, 1280);
         cl->effects().push_back(vs);
         otio::SerializableObject::Retainer<otio::Track> tr =
             new otio::Track();
@@ -43,10 +43,11 @@ main(int argc, char** argv)
         auto output = tl.value->to_json_string(&err, {});
         assertFalse(otio::is_error(err));
         assertEqual(output.c_str(), R"CONTENT({
-    "OTIO_SCHEMA": "Timeline.1",
+    "OTIO_SCHEMA": "Timeline.2",
     "metadata": {},
     "name": "",
     "global_start_time": null,
+    "canvas_size": null,
     "tracks": {
         "OTIO_SCHEMA": "Stack.1",
         "metadata": {},
@@ -77,8 +78,8 @@ main(int argc, char** argv)
                                 "name": "scale",
                                 "effect_name": "VideoScale",
                                 "enabled": true,
-                                "width": "1/2",
-                                "height": "1/2"
+                                "width": 1920,
+                                "height": 1280
                             }
                         ],
                         "markers": [],

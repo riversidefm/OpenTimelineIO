@@ -2,15 +2,8 @@
 
 #include "opentimelineio/effect.h"
 #include "opentimelineio/version.h"
-#include "opentime/rational.h"
 
 using opentime::Rational;
-
-namespace {
-constexpr Rational One      = Rational(1, 1);
-constexpr Rational MinusOne = Rational(-1, 1);
-constexpr Rational Zero     = Rational(0, 1);
-};  // anonymous namespace
 
 namespace opentimelineio { namespace OPENTIMELINEIO_VERSION {
 
@@ -36,19 +29,19 @@ public:
     /// @param enabled Whether the effect is enabled.
     VideoScale(
         std::string const&   name        = std::string(),
-        Rational             width       = One,
-        Rational             height      = One,
+        int64_t              width       = 0,
+        int64_t              height      = 0,
         AnyDictionary const& metadata    = AnyDictionary())
         : Effect(name, Schema::name, metadata)
         , _width(width)
         , _height(height)
     {}
 
-    const Rational& width() const noexcept { return _width; }
-    const Rational& height() const noexcept { return _height; }
+    int64_t width() const noexcept { return _width; }
+    int64_t height() const noexcept { return _height; }
 
-    void set_width(Rational const& width) noexcept { _width = width; }
-    void set_height(Rational const& height) noexcept { _height = height; }
+    void set_width(int64_t width) noexcept { _width = width; }
+    void set_height(int64_t height) noexcept { _height = height; }
 
 protected:
 
@@ -56,8 +49,8 @@ protected:
     bool read_from(Reader&) override;
     void write_to(Writer&) const override;
 
-    Rational _width;  ///< The width scaling factor.
-    Rational _height; ///< The height scaling factor.
+    int64_t _width;  ///< The scaled width
+    int64_t _height; ///< The scaled height
 };
 
 /// @brief An crop effect
@@ -84,10 +77,10 @@ public:
     /// @param enabled Whether the effect is enabled.
     VideoCrop(
         std::string const&   name        = std::string(),
-        Rational             left        = MinusOne,
-        Rational             right       = One,
-        Rational             top         = MinusOne,
-        Rational             bottom      = One,
+        int64_t              left        = 0,
+        int64_t              right       = 0,
+        int64_t              top         = 0,
+        int64_t              bottom      = 0,
         AnyDictionary const& metadata    = AnyDictionary(),
         bool                 enabled     = true)
         : Effect(name, Schema::name, metadata, enabled)
@@ -97,25 +90,25 @@ public:
         , _bottom(bottom)
     {}
 
-    const Rational& left() const noexcept { return _left; }
-    const Rational& right() const noexcept { return _right; }
-    const Rational& top() const noexcept { return _top; }
-    const Rational& bottom() const noexcept { return _bottom; }
+    int64_t left() const noexcept { return _left; }
+    int64_t right() const noexcept { return _right; }
+    int64_t top() const noexcept { return _top; }
+    int64_t bottom() const noexcept { return _bottom; }
 
-    void set_left(Rational const& left) noexcept { _left = left; }
-    void set_right(Rational const& right) noexcept { _right = right; }
-    void set_top(Rational const& top) noexcept { _top = top; }
-    void set_bottom(Rational const& bottom) noexcept { _bottom = bottom; }
+    void set_left(int64_t left) noexcept { _left = left; }
+    void set_right(int64_t right) noexcept { _right = right; }
+    void set_top(int64_t top) noexcept { _top = top; }
+    void set_bottom(int64_t bottom) noexcept { _bottom = bottom; }
 
 protected:
     virtual ~VideoCrop() = default;
     bool read_from(Reader&) override;
     void write_to(Writer&) const override;
 
-    Rational _left;   ///< The amount to crop from the left.
-    Rational _right;  ///< The amount to crop from the right.
-    Rational _top;    ///< The amount to crop from the top.
-    Rational _bottom; ///< The amount to crop from the bottom.
+    int64_t _left;   ///< The amount to crop from the left.
+    int64_t _right;  ///< The amount to crop from the right.
+    int64_t _top;    ///< The amount to crop from the top.
+    int64_t _bottom; ///< The amount to crop from the bottom.
 };
 
 /// @brief An position effect
@@ -134,14 +127,14 @@ public:
     /// @brief Create a new position effect.
     ///
     /// @param name The name of the effect object.
-    /// @param x The horizontal shift of the image centre.
-    /// @param y The vertical shift of the image centre.
+    /// @param x Distance of top left corner from left edge of canvas
+    /// @param y Distance of top left corner from top edge of canvas
     /// @param metadata The metadata for the effect.
     /// @param enabled Whether the effect is enabled.
     VideoPosition(
         std::string const&   name        = std::string(),
-        Rational             x           = Zero,
-        Rational             y           = Zero,
+        int64_t              x           = 0,
+        int64_t              y           = 0,
         AnyDictionary const& metadata    = AnyDictionary(),
         bool                 enabled     = true)
         : Effect(name, Schema::name, metadata, enabled)
@@ -149,19 +142,19 @@ public:
         , _y(y)
     {}
 
-    const Rational& x() const noexcept { return _x; }
-    const Rational& y() const noexcept { return _y; }
+    int64_t x() const noexcept { return _x; }
+    int64_t y() const noexcept { return _y; }
 
-    void set_x(Rational const& x) noexcept { _x = x; }
-    void set_y(Rational const& y) noexcept { _y = y; }
+    void set_x(int64_t x) noexcept { _x = x; }
+    void set_y(int64_t y) noexcept { _y = y; }
 
 protected:
     virtual ~VideoPosition() = default;
     bool read_from(Reader&) override;
     void write_to(Writer&) const override;
 
-    Rational _x; ///< The horizontal position.
-    Rational _y; ///< The vertical position.
+    int64_t _x; ///< The horizontal position.
+    int64_t _y; ///< The vertical position.
 };
 
 /// @brief An rotation effect
@@ -180,27 +173,27 @@ public:
     /// @brief Create a new rotation effect.
     ///
     /// @param name The name of the effect object.
-    /// @param rotation The amount of rotation in (0 = none, 1 = full clockwise).
+    /// @param angle The amount of rotation, degrees clockwise
     /// @param metadata The metadata for the effect.
     /// @param enabled Whether the effect is enabled.
     VideoRotate(
         std::string const&   name        = std::string(),
-        Rational             rotation    = Zero,
+        double               angle      = 0.0,
         AnyDictionary const& metadata    = AnyDictionary(),
         bool                 enabled     = true)
         : Effect(name, Schema::name, metadata, enabled)
-        , _rotation(rotation)
+        , _angle(angle)
     {}
 
-    const Rational& rotation() const noexcept { return _rotation; }
-    void set_rotation(Rational const& rotation) noexcept { _rotation = rotation; }
+    double angle() const noexcept { return _angle; }
+    void set_angle(double angle) noexcept { _angle = angle; }
 
 protected:
     virtual ~VideoRotate() = default;
     bool read_from(Reader&) override;
     void write_to(Writer&) const override;
 
-    Rational _rotation; ///< The rotation rotation (0 = none, 1 = full clockwise).
+    double _angle; ///< The angle of rotation, degrees clockwise
 };
 
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION

@@ -716,31 +716,29 @@ Instead it affects the speed of the media displayed within that item.
             py::arg_v("metadata"_a = py::none()));
 
     py::class_<VideoScale, Effect, managing_ptr<VideoScale>>(m, "VideoScale", py::dynamic_attr(), R"docstring(
-An effect that scales video by a given factor.
+An effect that scales video to the given dimensions.
 )docstring")
-        .def(py::init([](std::string name, Rational width, Rational height, py::object metadata) {
+        .def(py::init([](std::string name, int64_t width, int64_t height, py::object metadata) {
                 return new VideoScale(name, width, height, py_to_any_dictionary(metadata));
             }),
             "name"_a = std::string(),
-            "width"_a = Rational(1, 1),
-            "height"_a = Rational(1, 1),
+            "width"_a = 0,
+            "height"_a = 0,
             "metadata"_a = py::none())
-        .def_property("width", &VideoScale::width, &VideoScale::set_width, "Width scaling factor. 1 means no scaling.")
-        .def_property("height", &VideoScale::height, &VideoScale::set_height, "Height scaling factor. 1 means no scaling.");
+        .def_property("width", &VideoScale::width, &VideoScale::set_width, "Width to scale to")
+        .def_property("height", &VideoScale::height, &VideoScale::set_height, "Height to scale to");
 
     py::class_<VideoCrop, Effect, managing_ptr<VideoCrop>>(m, "VideoCrop", py::dynamic_attr(), R"docstring(
-An effect that crops video by a given amount on each side.
-The crop is specified as the distance from the centre of the video frame,
-where -1 means the left or top edge, and 1 means the right or bottom edge
+An effect that crops video by a given amount of pixels on each side.
 )docstring")
-        .def(py::init([](std::string name, Rational left, Rational right, Rational top, Rational bottom, py::object metadata) {
+        .def(py::init([](std::string name, int64_t left, int64_t right, int64_t top, int64_t bottom, py::object metadata) {
                 return new VideoCrop(name, left, right, top, bottom, py_to_any_dictionary(metadata));
             }),
             "name"_a = std::string(),
-            "left"_a = -1,
-            "right"_a = 1,
-            "top"_a = -1,
-            "bottom"_a = 1,
+            "left"_a = 0,
+            "right"_a = 0,
+            "top"_a = 0,
+            "bottom"_a = 0,
             "metadata"_a = py::none())
         .def_property("left", &VideoCrop::left, &VideoCrop::set_left)
         .def_property("right", &VideoCrop::right, &VideoCrop::set_right)
@@ -749,10 +747,9 @@ where -1 means the left or top edge, and 1 means the right or bottom edge
 
     py::class_<VideoPosition, Effect, managing_ptr<VideoPosition>>(m, "VideoPosition", py::dynamic_attr(), R"docstring(
 An effect that positions video by a given offset in the frame.
-The position specifies the offset of the centre of the frame,
-where -1 means the left or top edge, and 1 means the right or bottom edge.
+The position is the location of the top left of the image on the canvas
 )docstring")
-        .def(py::init([](std::string name, Rational x, Rational y, py::object metadata) {
+        .def(py::init([](std::string name, int64_t x, int64_t y, py::object metadata) {
                 return new VideoPosition(name, x, y, py_to_any_dictionary(metadata));
             }),
             "name"_a = std::string(),
@@ -764,16 +761,15 @@ where -1 means the left or top edge, and 1 means the right or bottom edge.
 
     py::class_<VideoRotate, Effect, managing_ptr<VideoRotate>>(m, "VideoRotate", py::dynamic_attr(), R"docstring(
 An effect that rotates video by a given amount.
-The rotation is specified as a fraction, where 0 means no rotation,
-and 1 means a full rotation.
+The rotation is specified in degrees clockwise.
 )docstring")
-        .def(py::init([](std::string name, Rational rotation, py::object metadata) {
+        .def(py::init([](std::string name, double rotation, py::object metadata) {
                 return new VideoRotate(name, rotation, py_to_any_dictionary(metadata));
             }),
             "name"_a = std::string(),
-            "rotation"_a = 0,
+            "angle"_a = 0.0,
             "metadata"_a = py::none())
-        .def_property("rotation", &VideoRotate::rotation, &VideoRotate::set_rotation, "Rotation amount. 0 means no rotation, 1 means 360 degrees.");
+        .def_property("angle", &VideoRotate::angle, &VideoRotate::set_angle, "Rotation angle in degrees clockwise");
 
     py::class_<AudioVolume, Effect, managing_ptr<AudioVolume>>(m, "AudioVolume", py::dynamic_attr(), R"docstring(
 An effect that multiplies the audio volume by a given gain value

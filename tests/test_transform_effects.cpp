@@ -42,33 +42,33 @@ main(int argc, char** argv)
                     {
                         "OTIO_SCHEMA": "VideoScale.1",
                         "name": "scale",
-                        "width": "1/2",
-                        "height": "1/2",
+                        "width": 100,
+                        "height": 120,
                         "effect_name": "VideoScale",
                         "enabled": true
                     },
                     {
                         "OTIO_SCHEMA": "VideoPosition.1",
                         "name": "position",
-                        "x": "-1/2",
-                        "y": "-1/2",
+                        "x": 10,
+                        "y": 20,
                         "effect_name": "VideoPosition",
                         "enabled": true
                     },
                     {
                         "OTIO_SCHEMA": "VideoRotate.1",
                         "name": "rotate",
-                        "rotation": "90/360",
+                        "angle": 45.5,
                         "effect_name": "VideoRotate",
                         "enabled": true
                     },
                     {
                         "OTIO_SCHEMA": "VideoCrop.1",
                         "name": "crop",
-                        "left": "-1/4",
-                        "right": "1/4",
-                        "top": "-1/4",
-                        "bottom": "1/4",
+                        "left": 5,
+                        "right": 6,
+                        "top": 7,
+                        "bottom": 8,
                         "effect_name": "VideoCrop",
                         "enabled": true
                     }
@@ -86,24 +86,24 @@ main(int argc, char** argv)
 
         auto video_scale = dynamic_cast<const VideoScale*>(effects[0].value);
         assertNotNull(video_scale);
-        assertEqual(video_scale->width(), Rational(1, 2));
-        assertEqual(video_scale->height(), Rational(1, 2));
+        assertEqual(video_scale->width(), 100);
+        assertEqual(video_scale->height(), 120);
 
         auto video_position = dynamic_cast<const VideoPosition*>(effects[1].value);
         assertNotNull(video_position);
-        assertEqual(video_position->x(), Rational(-1, 2));
-        assertEqual(video_position->y(), Rational(-1, 2));
+        assertEqual(video_position->x(), 10);
+        assertEqual(video_position->y(), 20);
 
         auto video_rotate = dynamic_cast<const VideoRotate*>(effects[2].value);
         assertNotNull(video_rotate);
-        assertEqual(video_rotate->rotation(), Rational(90, 360));
+        assertEqual(video_rotate->angle(), 45.5);
 
         auto video_crop = dynamic_cast<const VideoCrop*>(effects[3].value);
         assertNotNull(video_crop);
-        assertEqual(video_crop->left(), Rational(-1, 4));
-        assertEqual(video_crop->right(), Rational(1, 4));
-        assertEqual(video_crop->top(), Rational(-1, 4));
-        assertEqual(video_crop->bottom(), Rational(1, 4));
+        assertEqual(video_crop->left(), 5);
+        assertEqual(video_crop->right(), 6);
+        assertEqual(video_crop->top(), 7);
+        assertEqual(video_crop->bottom(), 8);
     });
 
     tests.add_test("test_video_transform_write", [] {
@@ -114,10 +114,10 @@ main(int argc, char** argv)
             new otio::ExternalReference("unit_test_url"),
             std::nullopt,
             otio::AnyDictionary(),
-            { new otio::VideoScale("scale", otime::Rational(1, 2), otime::Rational(1, 2)),
-              new otio::VideoPosition("position", otime::Rational(-1, 2), otime::Rational(-1, 2)),
-              new otio::VideoRotate("rotate", otime::Rational(90, 360)),
-              new otio::VideoCrop("crop", otime::Rational(-1, 4), otime::Rational(1, 4), otime::Rational(-1, 4), otime::Rational(1, 4)) }));
+            { new otio::VideoScale("scale", 100, 120),
+              new otio::VideoPosition("position", 10, 20),
+              new otio::VideoRotate("rotate", 40.5),
+              new otio::VideoCrop("crop", 1, 2, 3, 4) }));
 
         auto json = clip.value->to_json_string();
 
@@ -133,8 +133,8 @@ main(int argc, char** argv)
             "name": "scale",
             "effect_name": "VideoScale",
             "enabled": true,
-            "width": "1/2",
-            "height": "1/2"
+            "width": 100,
+            "height": 120
         },
         {
             "OTIO_SCHEMA": "VideoPosition.1",
@@ -142,8 +142,8 @@ main(int argc, char** argv)
             "name": "position",
             "effect_name": "VideoPosition",
             "enabled": true,
-            "x": "-1/2",
-            "y": "-1/2"
+            "x": 10,
+            "y": 20
         },
         {
             "OTIO_SCHEMA": "VideoRotate.1",
@@ -151,7 +151,7 @@ main(int argc, char** argv)
             "name": "rotate",
             "effect_name": "VideoRotate",
             "enabled": true,
-            "rotation": "1/4"
+            "angle": 40.5
         },
         {
             "OTIO_SCHEMA": "VideoCrop.1",
@@ -159,10 +159,10 @@ main(int argc, char** argv)
             "name": "crop",
             "effect_name": "VideoCrop",
             "enabled": true,
-            "left": "-1/4",
-            "right": "1/4",
-            "top": "-1/4",
-            "bottom": "1/4"
+            "left": 1,
+            "right": 2,
+            "top": 3,
+            "bottom": 4
         }
     ],
     "markers": [],

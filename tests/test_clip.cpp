@@ -166,8 +166,8 @@ main(int argc, char** argv)
         SerializableObject::Retainer<VideoScale> vscl(
             new VideoScale(
                 VideoScale::Schema::name,
-                Rational(width / 2, width),
-                Rational(height / 2, height)));
+                100,
+                200));
 
         std::vector<Effect*> effects = { ltw, vscl };
 
@@ -264,8 +264,8 @@ main(int argc, char** argv)
         assertEqual(effect->time_scalar(), time_scalar);
         auto scale = dynamic_cast<OTIO_NS::VideoScale*>(
             clip->effects()[1].value);
-        assertEqual(scale->width(), Rational(width / 2, width));
-        assertEqual(scale->height(), Rational(height / 2, height));
+        assertEqual(scale->width(), 100);
+        assertEqual(scale->height(), 200);
 
         // basic test for a marker
         assertEqual(clip->markers().size(), markers.size());

@@ -46,13 +46,13 @@ void VideoPosition::write_to(Writer &writer) const {
 
 bool VideoRotate::read_from(Reader &reader)
 {
-    return reader.read("rotation", &_rotation)
+    return reader.read("angle", &_angle)
            && Parent::read_from(reader);
 }
 
 void VideoRotate::write_to(Writer &writer) const {
     Parent::write_to(writer);
-    writer.write("rotation", _rotation);
+    writer.write("angle", _angle);
 }
 
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION

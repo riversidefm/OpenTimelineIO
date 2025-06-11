@@ -326,11 +326,11 @@ parameters:
 ### VideoRotate.1
 
 parameters:
+- *angle*
 - *effect_name*
 - *enabled*
 - *metadata*
 - *name*
-- *rotation*
 
 ### VideoScale.1
 
