@@ -1,0 +1,38 @@
+{
+  "name": "opentimelineio",
+  "version": "0.18.0",
+  "description": "OpenTimelineIO TypeScript/JavaScript bindings",
+  "main": "opentimelineio.js",
+  "types": "index.d.ts",
+  "files": [
+    "opentimelineio.js",
+    "opentimelineio.wasm",
+    "index.d.ts",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AcademySoftwareFoundation/OpenTimelineIO.git"
+  },
+  "keywords": [
+    "timeline",
+    "editorial",
+    "vfx",
+    "animation",
+    "video",
+    "audio",
+    "post-production",
+    "wasm",
+    "typescript"
+  ],
+  "author": "Contributors to the OpenTimelineIO project",
+  "license": "Apache-2.0",
+  "homepage": "https://opentimelineio.readthedocs.io/",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^4.0.0"
+  }
+} 
