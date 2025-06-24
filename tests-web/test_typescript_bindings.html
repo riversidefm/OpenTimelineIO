@@ -70,7 +70,7 @@
         function loadOpenTimeModule() {
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                script.src = 'build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                script.src = '../build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
                 script.onload = () => {
                     console.log('OpenTime script loaded');
                     window.OpenTimeModule().then(module => {
@@ -87,7 +87,7 @@
         function loadOpenTimelineIOModule() {
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                script.src = 'build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                script.src = '../build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
                 script.onload = () => {
                     console.log('OpenTimelineIO script loaded');
                     window.OpenTimelineIOModule().then(module => {
@@ -98,7 +98,7 @@
                         
                         // Load wrapper classes
                         const wrapperScript = document.createElement('script');
-                        wrapperScript.src = 'src/ts-opentimelineio/typescript/wrappers.js';
+                        wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js';
                         wrapperScript.onload = () => {
                             console.log('Wrapper classes loaded');
                             resolve();
@@ -192,12 +192,10 @@
                     output += `Created Timeline: "${timeline.name()}"\n`;
                     output += `  Schema: ${timeline.schema_name()}\n`;
                     output += `  Version: ${timeline.schema_version()}\n`;
-                    output += `  Internal handle: ${timeline._handle}\n`;
                     
                     // Try creating a second timeline
                     const timeline2 = new window.OTIO.Timeline("Second Timeline");
                     output += `Created second Timeline: "${timeline2.name()}"\n`;
-                    output += `  Second timeline handle: ${timeline2._handle}\n`;
                     
                     // Dispose the second timeline first (test disposal on a fresh object)
                     output += `Attempting to dispose second timeline...\n`;
@@ -217,13 +215,10 @@
                 output += `  Kind: ${track.kind()}\n`;
                 output += `  Enabled: ${track.enabled()}\n\n`;
                 
-                // Create a clip (without time operations for now)
+                // Create a clip
                 const clip = new window.OTIO.Clip("My Clip");
                 output += `Created Clip: "${clip.name()}"\n`;
-                output += `  Enabled: ${clip.enabled()}\n`;
-                
-                // Skip time range operations for this test to isolate the disposal issue
-                output += `  Skipping time range operations to isolate disposal issue\n\n`;
+                output += `  Enabled: ${clip.enabled()}\n\n`;
                 
                 // Create an external reference
                 const mediaRef = new window.OTIO.ExternalReference("file:///path/to/media.mov");

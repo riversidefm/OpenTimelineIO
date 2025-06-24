@@ -21,20 +21,20 @@
             try {
                 // Load both modules
                 const openTimeScript = document.createElement('script');
-                openTimeScript.src = 'build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                openTimeScript.src = '../build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
                 document.head.appendChild(openTimeScript);
                 await new Promise(resolve => openTimeScript.onload = resolve);
                 const OpenTimeModule = await window.OpenTimeModule();
                 
                 const otioScript = document.createElement('script');
-                otioScript.src = 'build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                otioScript.src = '../build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
                 document.head.appendChild(otioScript);
                 await new Promise(resolve => otioScript.onload = resolve);
                 const Module = await window.OpenTimelineIOModule();
                 window.Module = Module;
                 
                 const wrapperScript = document.createElement('script');
-                wrapperScript.src = 'src/ts-opentimelineio/typescript/wrappers.js';
+                wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js';
                 document.head.appendChild(wrapperScript);
                 await new Promise(resolve => wrapperScript.onload = resolve);
                 
@@ -98,14 +98,14 @@
                     output += `   ❌ Failed: ${e.message}\n\n`;
                 }
                 
-                // Test 6: Access to_json_string() then dispose (THE PREVIOUSLY PROBLEMATIC ONE)
-                output += '6. Access to_json_string() then dispose (FIXED):\n';
+                // Test 6: Access to_json_string() then dispose
+                output += '6. Access to_json_string() then dispose:\n';
                 try {
                     const t6 = new window.OTIO.Timeline("Test6");
                     const json = t6.to_json_string();
                     output += `   JSON length: ${json.length}\n`;
                     t6.dispose();
-                    output += '   ✅ Success - to_json_string disposal now works!\n\n';
+                    output += '   ✅ Success\n\n';
                 } catch (e) {
                     output += `   ❌ Failed: ${e.message}\n\n`;
                 }
@@ -123,8 +123,8 @@
                     output += `   ❌ Failed: ${e.message}\n\n`;
                 }
                 
-                // Test 8: All operations like the main test (SHOULD NOW WORK)
-                output += '8. All operations (like main test - FIXED):\n';
+                // Test 8: All operations combined
+                output += '8. All operations combined:\n';
                 try {
                     const t8 = new window.OTIO.Timeline("Test8");
                     output += `   Name: "${t8.name()}"\n`;
@@ -135,7 +135,7 @@
                     const json = t8.to_json_string();
                     output += `   JSON length: ${json.length}\n`;
                     t8.dispose();
-                    output += '   ✅ Success - Full Timeline lifecycle now works!\n\n';
+                    output += '   ✅ Success\n\n';
                 } catch (e) {
                     output += `   ❌ Failed: ${e.message}\n\n`;
                 }
@@ -146,7 +146,7 @@
                     const timelines = [];
                     for (let i = 0; i < 5; i++) {
                         const t = new window.OTIO.Timeline(`StressTest${i}`);
-                        t.to_json_string(); // This used to break disposal
+                        t.to_json_string();
                         timelines.push(t);
                     }
                     
@@ -154,7 +154,7 @@
                     for (let i = 0; i < timelines.length; i++) {
                         timelines[i].dispose();
                     }
-                    output += '   ✅ Success - Multiple JSON operations work!\n\n';
+                    output += '   ✅ Success\n\n';
                 } catch (e) {
                     output += `   ❌ Failed: ${e.message}\n\n`;
                 }
@@ -164,7 +164,7 @@
                 if (output.includes('❌')) {
                     results.innerHTML = `<div class="error">Some tests failed</div>${output}`;
                 } else {
-                    results.innerHTML = `<div class="success">🎉 All Timeline operations work perfectly!</div>${output}`;
+                    results.innerHTML = `<div class="success">🎉 All tests passed</div>${output}`;
                 }
                 
             } catch (error) {
