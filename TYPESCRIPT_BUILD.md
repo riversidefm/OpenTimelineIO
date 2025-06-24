@@ -269,7 +269,6 @@ npm run build
 npm pack --dry-run
 
 # 4. (Optional) Publish
-export NPM_TOKEN=your_github_token
 npm publish
 ```
 
