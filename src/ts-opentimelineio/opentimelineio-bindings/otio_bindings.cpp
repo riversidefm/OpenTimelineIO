@@ -12,24 +12,21 @@
 #ifdef EMSCRIPTEN
 using namespace emscripten;
 
-std::string serialize_json_to_string_ts(val any_obj, int indent) {
-    // This is a simplified version - in a full implementation you'd need
-    // to convert the JavaScript object to the appropriate C++ type
-    // For now, we'll assume the object is already a SerializableObject*
-    return "{}"; // Placeholder
+// Simple demonstration functions
+std::string get_version() {
+    return "OpenTimelineIO 0.18.0 (TypeScript Bindings)";
 }
 
-val deserialize_json_from_string_ts(const std::string& input) {
-    // Simplified placeholder implementation
-    return val::object();
+bool test_connection() {
+    return true;
 }
 
 EMSCRIPTEN_BINDINGS(otio_core) {
-    // Core serialization functions
-    function("serialize_json_to_string", &serialize_json_to_string_ts);
-    function("deserialize_json_from_string", &deserialize_json_from_string_ts);
+    // Simple test functions
+    function("get_version", &get_version);
+    function("test_connection", &test_connection);
     
-    // Call the serializable object bindings
-    otio_serializable_object_bindings();
+    // Call the serializable object bindings (commented out for now due to protected destructors)
+    // otio_serializable_object_bindings();
 }
 #endif 

@@ -7,7 +7,6 @@ if(EMSCRIPTEN)
 
     add_executable(opentimelineio_wasm
                    otio_bindings.cpp
-                   otio_serializableObjects.cpp
                    ${_OTIO_TS_HEADER_FILES})
 
     target_include_directories(opentimelineio_wasm 

@@ -43,7 +43,6 @@ declare module 'opentimelineio' {
     contains(range: TimeRange): boolean;
     overlaps(range: TimeRange): boolean;
     intersects(range: TimeRange): boolean;
-    intersection(range: TimeRange): TimeRange;
     
     static range_from_start_end_time(start: RationalTime, end: RationalTime): TimeRange;
     static range_from_start_end_time_inclusive(start: RationalTime, end: RationalTime): TimeRange;
@@ -53,99 +52,24 @@ declare module 'opentimelineio' {
     constructor();
     constructor(offset: RationalTime);
     constructor(offset: RationalTime, scale: number);
-    constructor(offset: RationalTime, scale: number, rate: RationalTime);
+    constructor(offset: RationalTime, scale: number, rate: number);
     
     offset: RationalTime;
     scale: number;
-    rate: RationalTime;
+    rate: number;
     
     applied_to(time: RationalTime): RationalTime;
     applied_to(range: TimeRange): TimeRange;
   }
   
-  // Core OTIO types
-  export class SerializableObject {
-    schema_name(): string;
-    schema_version(): number;
-    to_json_string(indent?: number): string;
-  }
+  // Simple test functions to verify the bindings work
+  export function get_version(): string;
+  export function test_connection(): boolean;
   
-  export class SerializableObjectWithMetadata extends SerializableObject {
-    name(): string;
-    set_name(name: string): void;
-  }
-  
-  export class Marker extends SerializableObjectWithMetadata {
-    constructor(name: string, marked_range: TimeRange, color: string);
-    
-    color(): string;
-    set_color(color: string): void;
-    marked_range(): TimeRange;
-    set_marked_range(range: TimeRange): void;
-  }
-  
-  export class MediaReference extends SerializableObjectWithMetadata {
-    is_missing_reference(): boolean;
-  }
-  
-  export class ExternalReference extends MediaReference {
-    constructor(target_url: string);
-    
-    target_url(): string;
-    set_target_url(url: string): void;
-  }
-  
-  export class Composable extends SerializableObjectWithMetadata {
-  }
-  
-  export class Item extends Composable {
-    enabled(): boolean;
-    set_enabled(enabled: boolean): void;
-    source_range(): TimeRange | null;
-    set_source_range(range: TimeRange | null): void;
-  }
-  
-  export class Gap extends Item {
-    constructor(source_range: TimeRange, name?: string);
-  }
-  
-  export class Clip extends Item {
-    constructor(name?: string);
-    
-    media_reference(): MediaReference | null;
-    set_media_reference(ref: MediaReference | null): void;
-  }
-  
-  export class Composition extends Item {
-  }
-  
-  export class Track extends Composition {
-    constructor(name?: string);
-    
-    kind(): string;
-    set_kind(kind: string): void;
-  }
-  
-  export class Stack extends Composition {
-    constructor(name?: string);
-  }
-  
-  export class Timeline extends SerializableObjectWithMetadata {
-    constructor(name?: string);
-    
-    tracks(): Stack | null;
-    set_tracks(stack: Stack | null): void;
-    global_start_time(): RationalTime | null;
-    set_global_start_time(time: RationalTime | null): void;
-  }
-  
-  // Utility functions
-  export function serialize_json_to_string(obj: any, indent?: number): string;
-  export function deserialize_json_from_string(json: string): any;
+  // Note: Full OTIO class bindings are commented out due to protected destructor issues
+  // This is a foundational implementation that can be expanded once those issues are resolved
   
   // Operator functions for RationalTime
   export function add(a: RationalTime, b: RationalTime): RationalTime;
   export function subtract(a: RationalTime, b: RationalTime): RationalTime;
-  export function multiply(a: RationalTime, b: number): RationalTime;
-  export function divide(a: RationalTime, b: number): RationalTime;
 } 

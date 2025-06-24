@@ -50,52 +50,21 @@ declare interface ExternalReference {
 }
 
 /**
- * Example function to create a simple timeline
+ * Example function to test basic functionality
  */
-async function createSimpleTimeline() {
-  // In a real application, you would load the WASM module like this:
-  // const OpenTimelineIO = await import('opentimelineio');
-  // const Module = await OpenTimelineIO.default();
-  
-  // For this example, we assume Module is available
+async function testBasicFunctionality() {
   const Module = (globalThis as any).OpenTimelineIOModule;
   
-  console.log("Creating a simple timeline...");
+  console.log("Testing basic functionality...");
   
-  // Create a timeline
-  const timeline = new Module.Timeline("Example Timeline");
-  console.log(`Created timeline: ${timeline.name()}`);
+  // Test simple functions
+  const version = Module.get_version();
+  const connected = Module.test_connection();
   
-  // Create a video track
-  const videoTrack = new Module.Track("V1");
-  videoTrack.set_kind("Video");
+  console.log(`Version: ${version}`);
+  console.log(`Connection test: ${connected}`);
   
-  // Create time values
-  const frameRate = 24.0;
-  const clipStart = Module.RationalTime.from_seconds(0, frameRate);
-  const clipDuration = Module.RationalTime.from_seconds(5, frameRate);
-  const clipRange = new Module.TimeRange(clipStart, clipDuration);
-  
-  // Create a media reference
-  const mediaRef = new Module.ExternalReference("path/to/media.mov");
-  
-  // Create a clip
-  const clip = new Module.Clip("My Clip");
-  clip.set_media_reference(mediaRef);
-  clip.set_source_range(clipRange);
-  
-  console.log(`Created clip: ${clip.name()}`);
-  console.log(`Clip duration: ${clip.source_range().duration.value()}/${clip.source_range().duration.rate()}`);
-  
-  // Note: In a complete implementation, you would need to add methods for
-  // appending clips to tracks and tracks to timelines
-  
-  // Serialize the timeline to JSON
-  const jsonString = timeline.to_json_string(2);
-  console.log("Timeline JSON:");
-  console.log(jsonString);
-  
-  return timeline;
+  return { version, connected };
 }
 
 /**
@@ -113,9 +82,9 @@ async function timeArithmeticExample() {
   console.log(`Time 1: ${time1.value()}/${time1.rate()}`);
   console.log(`Time 2: ${time2.value()}/${time2.rate()}`);
   
-  // Time arithmetic (Note: In a real implementation, these would be available as functions)
-  // const sum = Module.add(time1, time2);
-  // const scaled = Module.multiply(time1, 2);
+  // Time arithmetic
+  const sum = Module.add(time1, time2);
+  const difference = Module.subtract(time2, time1);
   
   // Time conversions
   const time1InSeconds = time1.value() / time1.rate();
@@ -178,7 +147,7 @@ async function main() {
       return;
     }
     
-    await createSimpleTimeline();
+    await testBasicFunctionality();
     await timeArithmeticExample();
     await loadTimelineFromJson();
     
@@ -190,7 +159,7 @@ async function main() {
 }
 
 // Export the main function for use in other contexts
-export { main, createSimpleTimeline, timeArithmeticExample, loadTimelineFromJson };
+export { main, testBasicFunctionality, timeArithmeticExample, loadTimelineFromJson };
 
 // If running directly (not imported), run the main function
 declare const require: any;

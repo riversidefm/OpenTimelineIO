@@ -38,22 +38,20 @@ void opentime_rationalTime_bindings() {
         .function("value_rescaled_to", select_overload<double(double) const>(&RationalTime::value_rescaled_to))
         .function("value_rescaled_to", select_overload<double(RationalTime) const>(&RationalTime::value_rescaled_to))
         .function("almost_equal", &RationalTime::almost_equal)
-        ;
-        
-    // Operators
-    function("add", select_overload<RationalTime(const RationalTime&, const RationalTime&)>(&operator+));
-    function("subtract", select_overload<RationalTime(const RationalTime&, const RationalTime&)>(&operator-));
-    function("multiply", select_overload<RationalTime(const RationalTime&, double)>(&operator*));
-    function("divide", select_overload<RationalTime(const RationalTime&, double)>(&operator/));
-    
-    // Static methods
-    class_<RationalTime>()
+        .function("to_frames", select_overload<int() const>(&RationalTime::to_frames))
+        .function("to_frames", select_overload<int(double) const>(&RationalTime::to_frames))
+        .function("to_seconds", &RationalTime::to_seconds)
+        // Static methods
         .class_function("duration_from_start_end_time", &RationalTime::duration_from_start_end_time)
         .class_function("duration_from_start_end_time_inclusive", &RationalTime::duration_from_start_end_time_inclusive)
         .class_function("from_frames", &RationalTime::from_frames)
         .class_function("from_seconds", select_overload<RationalTime(double)>(&RationalTime::from_seconds))
         .class_function("from_seconds", select_overload<RationalTime(double, double)>(&RationalTime::from_seconds))
-        .class_function("from_timecode", select_overload<RationalTime(const std::string&, double)>(&RationalTime::from_timecode));
+        ;
+        
+    // Standalone operator functions
+    function("add", +[](const RationalTime& a, const RationalTime& b) -> RationalTime { return a + b; });
+    function("subtract", +[](const RationalTime& a, const RationalTime& b) -> RationalTime { return a - b; });
 #endif
 }
 
@@ -71,19 +69,17 @@ void opentime_timeRange_bindings() {
         .function("end_time_exclusive", &TimeRange::end_time_exclusive)
         .function("duration_extended_by", &TimeRange::duration_extended_by)
         .function("extended_by", &TimeRange::extended_by)
-        .function("clamped", select_overload<TimeRange(RationalTime) const>(&TimeRange::clamped))
-        .function("clamped", select_overload<TimeRange(TimeRange) const>(&TimeRange::clamped))
-        .function("contains", select_overload<bool(RationalTime) const>(&TimeRange::contains))
-        .function("contains", select_overload<bool(TimeRange) const>(&TimeRange::contains))
-        .function("overlaps", select_overload<bool(TimeRange) const>(&TimeRange::overlaps))
-        .function("intersects", &TimeRange::intersects)
-        .function("intersection", &TimeRange::intersection)
-        ;
-        
-    // Static methods
-    class_<TimeRange>()
+        .function("clamped", +[](const TimeRange& self, RationalTime time) -> RationalTime { return self.clamped(time); })
+        .function("clamped", +[](const TimeRange& self, const TimeRange& range) -> TimeRange { return self.clamped(range); })
+        .function("contains", +[](const TimeRange& self, RationalTime time) -> bool { return self.contains(time); })
+        .function("contains", +[](const TimeRange& self, const TimeRange& range) -> bool { return self.contains(range); })
+        .function("overlaps", +[](const TimeRange& self, RationalTime time) -> bool { return self.overlaps(time); })
+        .function("overlaps", +[](const TimeRange& self, const TimeRange& range) -> bool { return self.overlaps(range); })
+        .function("intersects", +[](const TimeRange& self, const TimeRange& range) -> bool { return self.intersects(range); })
+        // Static methods
         .class_function("range_from_start_end_time", &TimeRange::range_from_start_end_time)
-        .class_function("range_from_start_end_time_inclusive", &TimeRange::range_from_start_end_time_inclusive);
+        .class_function("range_from_start_end_time_inclusive", &TimeRange::range_from_start_end_time_inclusive)
+        ;
 #endif
 }
 
@@ -95,12 +91,12 @@ void opentime_timeTransform_bindings() {
         .constructor<>()
         .constructor<RationalTime>()
         .constructor<RationalTime, double>()
-        .constructor<RationalTime, double, RationalTime>()
+        .constructor<RationalTime, double, double>()
         .property("offset", &TimeTransform::offset)
         .property("scale", &TimeTransform::scale)
         .property("rate", &TimeTransform::rate)
-        .function("applied_to", select_overload<RationalTime(RationalTime) const>(&TimeTransform::applied_to))
-        .function("applied_to", select_overload<TimeRange(TimeRange) const>(&TimeTransform::applied_to))
+        .function("applied_to", +[](const TimeTransform& self, RationalTime time) -> RationalTime { return self.applied_to(time); })
+        .function("applied_to", +[](const TimeTransform& self, const TimeRange& range) -> TimeRange { return self.applied_to(range); })
         ;
 #endif
 }

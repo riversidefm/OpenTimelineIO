@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTimelineIO TypeScript Bindings Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>OpenTimelineIO TypeScript/WASM Bindings Test</h1>
+    
+    <div id="loading">Loading WASM modules...</div>
+    
+    <div id="opentime-test" class="test-section" style="display: none;">
+        <h2>OpenTime Module Test</h2>
+        <div id="opentime-results"></div>
+    </div>
+    
+    <div id="opentimelineio-test" class="test-section" style="display: none;">
+        <h2>OpenTimelineIO Module Test</h2>
+        <div id="opentimelineio-results"></div>
+    </div>
+
+    <script>
+        let OpenTimeModule = null;
+        let OpenTimelineIOModule = null;
+        
+        // Test OpenTime module
+        async function testOpenTime() {
+            try {
+                console.log('Loading OpenTime module...');
+                const script = document.createElement('script');
+                script.src = 'build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                script.onload = () => {
+                    console.log('OpenTime script loaded');
+                    
+                    // Wait for the module to initialize
+                    window.OpenTimeModule().then(module => {
+                        OpenTimeModule = module;
+                        console.log('OpenTime module initialized');
+                        runOpenTimeTests();
+                    });
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('Error loading OpenTime:', error);
+                document.getElementById('opentime-results').innerHTML = 
+                    `<div class="error">Error loading OpenTime module: ${error.message}</div>`;
+            }
+        }
+        
+        function runOpenTimeTests() {
+            const results = document.getElementById('opentime-results');
+            let output = '';
+            
+            try {
+                // Test RationalTime creation
+                const time1 = new OpenTimeModule.RationalTime(10, 24);
+                const time2 = new OpenTimeModule.RationalTime(5, 24);
+                
+                output += `<h3>RationalTime Tests:</h3>`;
+                output += `<pre>`;
+                output += `time1 = RationalTime(10, 24)\n`;
+                output += `  value: ${time1.value()}\n`;
+                output += `  rate: ${time1.rate()}\n`;
+                output += `  to_seconds: ${time1.to_seconds()}\n\n`;
+                
+                output += `time2 = RationalTime(5, 24)\n`;
+                output += `  value: ${time2.value()}\n`;
+                output += `  rate: ${time2.rate()}\n`;
+                output += `  to_seconds: ${time2.to_seconds()}\n\n`;
+                
+                // Test arithmetic
+                const sum = OpenTimeModule.add(time1, time2);
+                const diff = OpenTimeModule.subtract(time1, time2);
+                
+                output += `Arithmetic:\n`;
+                output += `  add(time1, time2): ${sum.value()}/${sum.rate()}\n`;
+                output += `  subtract(time1, time2): ${diff.value()}/${diff.rate()}\n\n`;
+                
+                // Test TimeRange
+                const range = new OpenTimeModule.TimeRange(time1, time2);
+                output += `TimeRange(time1, time2):\n`;
+                output += `  start_time: ${range.start_time().value()}/${range.start_time().rate()}\n`;
+                output += `  duration: ${range.duration().value()}/${range.duration().rate()}\n`;
+                output += `  end_time_exclusive: ${range.end_time_exclusive().value()}/${range.end_time_exclusive().rate()}\n`;
+                output += `</pre>`;
+                
+                results.innerHTML = `<div class="success">${output}</div>`;
+            } catch (error) {
+                results.innerHTML = `<div class="error">OpenTime test failed: ${error.message}</div>`;
+                console.error('OpenTime test error:', error);
+            }
+            
+            document.getElementById('opentime-test').style.display = 'block';
+        }
+        
+        // Test OpenTimelineIO module
+        async function testOpenTimelineIO() {
+            try {
+                console.log('Loading OpenTimelineIO module...');
+                const script = document.createElement('script');
+                script.src = 'build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                script.onload = () => {
+                    console.log('OpenTimelineIO script loaded');
+                    
+                    // Wait for the module to initialize
+                    window.OpenTimelineIOModule().then(module => {
+                        OpenTimelineIOModule = module;
+                        console.log('OpenTimelineIO module initialized');
+                        runOpenTimelineIOTests();
+                    });
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('Error loading OpenTimelineIO:', error);
+                document.getElementById('opentimelineio-results').innerHTML = 
+                    `<div class="error">Error loading OpenTimelineIO module: ${error.message}</div>`;
+            }
+        }
+        
+        function runOpenTimelineIOTests() {
+            const results = document.getElementById('opentimelineio-results');
+            let output = '';
+            
+            try {
+                // Test basic functions
+                const version = OpenTimelineIOModule.get_version();
+                const connected = OpenTimelineIOModule.test_connection();
+                
+                output += `<h3>Basic Tests:</h3>`;
+                output += `<pre>`;
+                output += `Version: ${version}\n`;
+                output += `Connection test: ${connected}\n`;
+                output += `</pre>`;
+                
+                results.innerHTML = `<div class="success">${output}</div>`;
+            } catch (error) {
+                results.innerHTML = `<div class="error">OpenTimelineIO test failed: ${error.message}</div>`;
+                console.error('OpenTimelineIO test error:', error);
+            }
+            
+            document.getElementById('opentimelineio-test').style.display = 'block';
+        }
+        
+        // Start tests
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Starting WASM tests...');
+            document.getElementById('loading').textContent = 'Starting tests...';
+            
+            // Test both modules
+            testOpenTime();
+            testOpenTimelineIO();
+            
+            // Hide loading message after a short delay
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 
