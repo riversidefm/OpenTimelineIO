@@ -19,7 +19,7 @@ if(EMSCRIPTEN)
 
     # Embind and WASM specific settings
     set_target_properties(opentimelineio_wasm PROPERTIES
-        LINK_FLAGS "--bind -s MODULARIZE=1 -s EXPORT_NAME='OpenTimelineIOModule' -s EXPORTED_FUNCTIONS=['_malloc','_free'] -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s DISABLE_EXCEPTION_CATCHING=0"
+        LINK_FLAGS "--bind -s MODULARIZE=1 -s EXPORT_NAME='OpenTimelineIOModule' -s EXPORTED_FUNCTIONS=['_malloc','_free'] -s ALLOW_MEMORY_GROWTH=1 -s WASM=1"
         OUTPUT_NAME "opentimelineio"
         SUFFIX ".js")
 

@@ -127,16 +127,114 @@ class Timeline {
     }
     
     dispose() {
-        if (this._handle && this._handle !== 0) {
-            try {
-                console.log('Disposing timeline with handle:', this._handle);
-                Module.delete_timeline(this._handle);
-                this._handle = null;
-            } catch (error) {
-                console.warn('Error disposing timeline:', error);
-                this._handle = null; // Mark as disposed even if error
+        if (this._disposed || !this._handle || this._handle === 0) return;
+        
+        try {
+            console.log('Disposing timeline with handle:', this._handle);
+            Module.delete_timeline(this._handle);
+        } catch (error) {
+            console.warn('Error disposing timeline:', error);
+        } finally {
+            this._handle = null;
+            this._disposed = true;
+        }
+    }
+
+    // Convenience methods for clips
+    add_clip(clip, index = null) {
+        if (index !== null) {
+            return this.insert(index, clip);
+        } else {
+            return this.append(clip);
+        }
+    }
+
+    get_clip(index) {
+        return this.child_at(index);
+    }
+
+    clip_count() {
+        return this.length;
+    }
+
+    // Advanced editing operations
+    overwrite_clip(clip, timeRange, removeTransitions = true) {
+        // Auto-convert OpenTime TimeRange to OTIO TimeRange if needed
+        let otioRange = timeRange;
+        
+        if (timeRange && timeRange.start_time && timeRange.duration && 
+            typeof timeRange.start_time.value === 'function' && 
+            typeof timeRange.duration.value === 'function') {
+            console.log('Converting OpenTime TimeRange to OTIO TimeRange for overwrite');
+            otioRange = convertTimeRange(timeRange);
+        }
+        
+        return Module.timeline_overwrite_clip(this._handle, clip._handle, otioRange, removeTransitions);
+    }
+
+    insert_clip(clip, time, removeTransitions = true) {
+        // Auto-convert OpenTime RationalTime to OTIO RationalTime if needed
+        let otioTime = time;
+        
+        if (time && typeof time.value === 'function' && typeof time.rate === 'function') {
+            console.log('Converting OpenTime RationalTime to OTIO RationalTime for insert');
+            otioTime = convertRationalTime(time);
+        }
+        
+        return Module.timeline_insert_clip(this._handle, clip._handle, otioTime, removeTransitions);
+    }
+
+    slice_at_time(time, removeTransitions = true) {
+        // Auto-convert OpenTime RationalTime to OTIO RationalTime if needed
+        let otioTime = time;
+        
+        if (time && typeof time.value === 'function' && typeof time.rate === 'function') {
+            console.log('Converting OpenTime RationalTime to OTIO RationalTime for slice');
+            otioTime = convertRationalTime(time);
+        }
+        
+        return Module.timeline_slice_at_time(this._handle, otioTime, removeTransitions);
+    }
+
+    get_global_start_time() {
+        return Module.timeline_global_start_time(this._handle);
+    }
+
+    set_global_start_time(time) {
+        // Auto-convert OpenTime RationalTime to OTIO RationalTime if needed
+        let otioTime = time;
+        
+        // Check if this is an OpenTime RationalTime (has value and rate functions)
+        if (time && typeof time.value === 'function' && typeof time.rate === 'function') {
+            console.log('Converting OpenTime RationalTime to OTIO RationalTime');
+            otioTime = convertRationalTime(time);
+        }
+        
+        Module.timeline_set_global_start_time(this._handle, otioTime);
+    }
+
+    get_audio_tracks() {
+        const result = [];
+        const count = Module.timeline_audio_tracks_count(this._handle);
+        for (let i = 0; i < count; i++) {
+            const trackHandle = Module.timeline_audio_track_at_index(this._handle, i);
+            if (trackHandle) {
+                result.push(wrapObject(trackHandle));
             }
         }
+        return result;
+    }
+
+    get_video_tracks() {
+        const result = [];
+        const count = Module.timeline_video_tracks_count(this._handle);
+        for (let i = 0; i < count; i++) {
+            const trackHandle = Module.timeline_video_track_at_index(this._handle, i);
+            if (trackHandle) {
+                result.push(wrapObject(trackHandle));
+            }
+        }
+        return result;
     }
 }
 
@@ -209,16 +307,75 @@ class Clip {
     }
     
     dispose() {
-        if (this._handle && this._handle !== 0) {
-            try {
-                console.log('Disposing clip with handle:', this._handle);
-                Module.delete_clip(this._handle);
-                this._handle = null;
-            } catch (error) {
-                console.warn('Error disposing clip:', error);
-                this._handle = null; // Mark as disposed even if error
-            }
+        if (this._disposed || !this._handle || this._handle === 0) return;
+        
+        try {
+            console.log('Disposing clip with handle:', this._handle);
+            Module.delete_clip(this._handle);
+        } catch (error) {
+            console.warn('Error disposing clip:', error);
+        } finally {
+            this._handle = null;
+            this._disposed = true;
         }
+    }
+
+    // Advanced operations
+    trim(deltaIn, deltaOut) {
+        // Auto-convert OpenTime RationalTime to OTIO RationalTime if needed
+        let otioDeltaIn = deltaIn;
+        let otioDeltaOut = deltaOut;
+        
+        if (deltaIn && typeof deltaIn.value === 'function' && typeof deltaIn.rate === 'function') {
+            otioDeltaIn = convertRationalTime(deltaIn);
+        }
+        if (deltaOut && typeof deltaOut.value === 'function' && typeof deltaOut.rate === 'function') {
+            otioDeltaOut = convertRationalTime(deltaOut);
+        }
+        
+        return Module.clip_trim(this._handle, otioDeltaIn, otioDeltaOut);
+    }
+
+    slip(delta) {
+        // Auto-convert OpenTime RationalTime to OTIO RationalTime if needed
+        let otioDelta = delta;
+        
+        if (delta && typeof delta.value === 'function' && typeof delta.rate === 'function') {
+            otioDelta = convertRationalTime(delta);
+        }
+        
+        Module.clip_slip(this._handle, otioDelta);
+    }
+
+    slide(delta) {
+        // Auto-convert OpenTime RationalTime to OTIO RationalTime if needed
+        let otioDelta = delta;
+        
+        if (delta && typeof delta.value === 'function' && typeof delta.rate === 'function') {
+            otioDelta = convertRationalTime(delta);
+        }
+        
+        Module.clip_slide(this._handle, otioDelta);
+    }
+
+    get_available_range() {
+        return Module.clip_available_range(this._handle);
+    }
+
+    get_trimmed_range() {
+        return Module.clip_trimmed_range(this._handle);
+    }
+
+    get_visible_range() {
+        return Module.clip_visible_range(this._handle);
+    }
+
+    get_effects_count() {
+        return Module.clip_effects_count(this._handle);
+    }
+
+    get_markers_count() {
+        return Module.clip_markers_count(this._handle);
     }
 }
 
@@ -313,16 +470,38 @@ class Track {
     }
     
     dispose() {
-        if (this._handle && this._handle !== 0) {
-            try {
-                console.log('Disposing track with handle:', this._handle);
-                Module.delete_track(this._handle);
-                this._handle = null;
-            } catch (error) {
-                console.warn('Error disposing track:', error);
-                this._handle = null; // Mark as disposed even if error
-            }
+        if (this._disposed || !this._handle || this._handle === 0) return;
+        
+        try {
+            console.log('Disposing track with handle:', this._handle);
+            Module.delete_track(this._handle);
+        } catch (error) {
+            console.warn('Error disposing track:', error);
+        } finally {
+            this._handle = null;
+            this._disposed = true;
         }
+    }
+
+    // Advanced operations
+    get_available_range() {
+        return Module.track_available_range(this._handle);
+    }
+
+    get_range_of_child_at_index(index) {
+        return Module.track_range_of_child_at_index(this._handle, index);
+    }
+
+    get_trimmed_range_of_child_at_index(index) {
+        return Module.track_trimmed_range_of_child_at_index(this._handle, index);
+    }
+
+    get_effects_count() {
+        return Module.track_effects_count(this._handle);
+    }
+
+    get_markers_count() {
+        return Module.track_markers_count(this._handle);
     }
 }
 
@@ -366,16 +545,26 @@ class ExternalReference {
     }
     
     dispose() {
-        if (this._handle && this._handle !== 0) {
-            try {
-                console.log('Disposing external reference with handle:', this._handle);
-                Module.delete_external_reference(this._handle);
-                this._handle = null;
-            } catch (error) {
-                console.warn('Error disposing external reference:', error);
-                this._handle = null; // Mark as disposed even if error
-            }
+        if (this._disposed || !this._handle || this._handle === 0) return;
+        
+        try {
+            console.log('Disposing external reference with handle:', this._handle);
+            Module.delete_external_reference(this._handle);
+        } catch (error) {
+            console.warn('Error disposing external reference:', error);
+        } finally {
+            this._handle = null;
+            this._disposed = true;
         }
+    }
+
+    // Advanced operations
+    get_available_range() {
+        return Module.external_reference_available_range(this._handle);
+    }
+
+    set_available_range(range) {
+        Module.external_reference_set_available_range(this._handle, range);
     }
 }
 
@@ -433,20 +622,145 @@ class Stack {
     }
     
     dispose() {
-        if (this._handle && this._handle !== 0) {
-            try {
-                console.log('Disposing stack with handle:', this._handle);
-                Module.delete_stack(this._handle);
-                this._handle = null;
-            } catch (error) {
-                console.warn('Error disposing stack:', error);
-                this._handle = null; // Mark as disposed even if error
+        if (this._disposed || !this._handle || this._handle === 0) return;
+        
+        try {
+            console.log('Disposing stack with handle:', this._handle);
+            Module.delete_stack(this._handle);
+        } catch (error) {
+            console.warn('Error disposing stack:', error);
+        } finally {
+            this._handle = null;
+            this._disposed = true;
+        }
+    }
+
+    // Advanced operations
+    get_range_of_child_at_index(index) {
+        return Module.composition_range_of_child_at_index ? 
+               Module.composition_range_of_child_at_index(this._handle, index) : 
+               null;
+    }
+}
+
+// Gap wrapper
+class Gap {
+    constructor(sourceRangeOrDuration, name = "Gap") {
+        if (typeof sourceRangeOrDuration === 'object' && sourceRangeOrDuration.start_time !== undefined) {
+            // It's a TimeRange - auto-convert if needed
+            let otioRange = sourceRangeOrDuration;
+            
+            if (sourceRangeOrDuration.start_time && sourceRangeOrDuration.duration && 
+                typeof sourceRangeOrDuration.start_time.value === 'function' && 
+                typeof sourceRangeOrDuration.duration.value === 'function') {
+                console.log('Converting OpenTime TimeRange to OTIO TimeRange for Gap');
+                otioRange = convertTimeRange(sourceRangeOrDuration);
             }
+            
+            this._handle = Module.create_gap(otioRange, name);
+        } else {
+            // It's a duration (RationalTime) - auto-convert if needed
+            let otioDuration = sourceRangeOrDuration;
+            
+            if (sourceRangeOrDuration && typeof sourceRangeOrDuration.value === 'function' && 
+                typeof sourceRangeOrDuration.rate === 'function') {
+                console.log('Converting OpenTime RationalTime to OTIO RationalTime for Gap duration');
+                otioDuration = convertRationalTime(sourceRangeOrDuration);
+            }
+            
+            this._handle = Module.create_gap_with_duration(otioDuration, name);
+        }
+    }
+
+    get name() {
+        return Module.gap_name ? Module.gap_name(this._handle) : "";
+    }
+
+    set name(value) {
+        if (Module.gap_set_name) Module.gap_set_name(this._handle, value);
+    }
+
+    to_json_string() {
+        return Module.gap_to_json_string(this._handle);
+    }
+
+    dispose() {
+        if (this._disposed || !this._handle || this._handle === 0) return;
+        
+        try {
+            if (Module.delete_gap) {
+                console.log('Disposing gap with handle:', this._handle);
+                Module.delete_gap(this._handle);
+            }
+        } catch (error) {
+            console.warn("Error disposing Gap:", error);
+        } finally {
+            this._handle = null;
+            this._disposed = true;
         }
     }
 }
 
-// Export for use
-if (typeof window !== 'undefined') {
-    window.OTIO = { Timeline, Clip, Track, ExternalReference, Stack };
-} 
+// Helper functions for editing operations
+const EditingOperations = {
+    // Reference points for fill operations
+    ReferencePoint: {
+        SOURCE: "Source",
+        SEQUENCE: "Sequence", 
+        FIT: "Fit"
+    },
+
+    // Trim modes
+    TrimMode: {
+        RIPPLE: "ripple",
+        ROLL: "roll", 
+        SLIP: "slip",
+        SLIDE: "slide"
+    },
+
+    // Utility function to create gaps
+    createGap: function(duration, name = "Gap") {
+        // Auto-convert OpenTime RationalTime to OTIO RationalTime if needed
+        let otioDuration = duration;
+        
+        if (duration && typeof duration.value === 'function' && typeof duration.rate === 'function') {
+            console.log('Converting OpenTime RationalTime to OTIO RationalTime for Gap creation');
+            otioDuration = convertRationalTime(duration);
+        }
+        
+        return new Gap(otioDuration, name);
+    },
+
+    // Utility function to create time ranges
+    createTimeRange: function(startTime, duration) {
+        return new Module.OTIOTimeRange(startTime, duration);
+    },
+
+    // Utility function to create rational times
+    createRationalTime: function(value, rate = 24) {
+        return new Module.OTIORationalTime(value, rate);
+    }
+};
+
+// Export all classes and utilities
+window.OTIO = {
+    Timeline,
+    Track,
+    Clip,
+    ExternalReference,
+    Stack,
+    Gap,
+    EditingOperations,
+    
+    // Helper functions
+    wrapObject,
+    convertTimeRange,
+    convertRationalTime
+};
+
+// Also export OpenTime for convenience if available
+if (typeof OpenTimeModule !== 'undefined') {
+    window.OTIO.OpenTime = OpenTimeModule;
+}
+
+// Test functions 

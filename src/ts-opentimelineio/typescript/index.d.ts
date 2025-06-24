@@ -190,6 +190,17 @@ declare module 'opentimelineio' {
     get_track(index: number): Track | null;
     track_count(): number;
     
+    // Advanced editing operations
+    overwrite_clip(clip: Clip, timeRange: OTIOTimeRange, removeTransitions?: boolean): boolean;
+    insert_clip(clip: Clip, time: OTIORationalTime, removeTransitions?: boolean): boolean;
+    slice_at_time(time: OTIORationalTime, removeTransitions?: boolean): boolean;
+    
+    // Timeline properties
+    get_global_start_time(): OTIORationalTime;
+    set_global_start_time(time: OTIORationalTime): void;
+    get_audio_tracks(): Track[];
+    get_video_tracks(): Track[];
+    
     dispose(): void;
   }
   
@@ -205,6 +216,19 @@ declare module 'opentimelineio' {
     to_json_string(): string;
     media_reference(): ExternalReference | null;
     set_media_reference(ref: ExternalReference): void;
+    
+    // Advanced editing operations
+    trim(deltaIn: OTIORationalTime, deltaOut: OTIORationalTime): boolean;
+    slip(delta: OTIORationalTime): void;
+    slide(delta: OTIORationalTime): void;
+    
+    // Advanced properties
+    get_available_range(): OTIOTimeRange;
+    get_trimmed_range(): OTIOTimeRange;
+    get_visible_range(): OTIOTimeRange;
+    get_effects_count(): number;
+    get_markers_count(): number;
+    
     dispose(): void;
   }
   
@@ -220,11 +244,11 @@ declare module 'opentimelineio' {
     
     // Track composition operations
     readonly length: number;
-    child_at(index: number): Clip | null;
-    append(item: Clip): boolean;
-    insert(index: number, item: Clip): boolean;
+    child_at(index: number): Clip | Gap | null;
+    append(item: Clip | Gap): boolean;
+    insert(index: number, item: Clip | Gap): boolean;
     remove(index: number): boolean;
-    index_of(item: Clip): number;
+    index_of(item: Clip | Gap): number;
     
     // Convenience methods for clips
     add_clip(clip: Clip): boolean;
@@ -232,6 +256,13 @@ declare module 'opentimelineio' {
     remove_clip(index: number): boolean;
     get_clip(index: number): Clip | null;
     clip_count(): number;
+    
+    // Advanced properties
+    get_available_range(): OTIOTimeRange;
+    get_range_of_child_at_index(index: number): OTIOTimeRange;
+    get_trimmed_range_of_child_at_index(index: number): OTIOTimeRange;
+    get_effects_count(): number;
+    get_markers_count(): number;
     
     dispose(): void;
   }
@@ -244,6 +275,11 @@ declare module 'opentimelineio' {
     set_target_url(url: string): void;
     is_missing_reference(): boolean;
     to_json_string(): string;
+    
+    // Advanced properties
+    get_available_range(): OTIOTimeRange;
+    set_available_range(range: OTIOTimeRange): void;
+    
     dispose(): void;
   }
   
@@ -275,4 +311,71 @@ declare module 'opentimelineio' {
   // Operator functions for OTIORationalTime (OpenTimelineIO module)
   export function otio_add(a: OTIORationalTime, b: OTIORationalTime): OTIORationalTime;
   export function otio_subtract(a: OTIORationalTime, b: OTIORationalTime): OTIORationalTime;
+  
+  // Gap class
+  export class Gap {
+    constructor(sourceRangeOrDuration: OTIOTimeRange | OTIORationalTime, name?: string);
+    name(): string;
+    set_name(name: string): void;
+    to_json_string(): string;
+    dispose(): void;
+  }
+
+  // Advanced editing algorithm functions
+  export function timeline_overwrite_clip(timelineHandle: Handle, clipHandle: Handle, range: OTIOTimeRange, removeTransitions: boolean): boolean;
+  export function timeline_insert_clip(timelineHandle: Handle, clipHandle: Handle, time: OTIORationalTime, removeTransitions: boolean): boolean;
+  export function timeline_slice_at_time(timelineHandle: Handle, time: OTIORationalTime, removeTransitions: boolean): boolean;
+  export function clip_trim(clipHandle: Handle, deltaIn: OTIORationalTime, deltaOut: OTIORationalTime): boolean;
+  export function clip_slip(clipHandle: Handle, delta: OTIORationalTime): void;
+  export function clip_slide(clipHandle: Handle, delta: OTIORationalTime): void;
+
+  // Effects and markers support
+  export function clip_effects_count(handle: Handle): number;
+  export function clip_markers_count(handle: Handle): number;
+  export function track_effects_count(handle: Handle): number;
+  export function track_markers_count(handle: Handle): number;
+
+  // Advanced clip properties
+  export function clip_available_range(handle: Handle): OTIOTimeRange;
+  export function clip_trimmed_range(handle: Handle): OTIOTimeRange;
+  export function clip_visible_range(handle: Handle): OTIOTimeRange;
+
+  // Media reference advanced properties
+  export function external_reference_available_range(handle: Handle): OTIOTimeRange;
+  export function external_reference_set_available_range(handle: Handle, range: OTIOTimeRange): void;
+
+  // Timeline-level operations
+  export function timeline_global_start_time(handle: Handle): OTIORationalTime;
+  export function timeline_set_global_start_time(handle: Handle, time: OTIORationalTime): void;
+  export function timeline_audio_tracks(handle: Handle): Handle[];
+  export function timeline_video_tracks(handle: Handle): Handle[];
+
+  // Advanced track operations
+  export function track_available_range(handle: Handle): OTIOTimeRange;
+  export function track_range_of_child_at_index(handle: Handle, index: number): OTIOTimeRange;
+  export function track_trimmed_range_of_child_at_index(handle: Handle, index: number): OTIOTimeRange;
+
+  // Gap factory functions
+  export function create_gap(sourceRange: OTIOTimeRange, name: string): Handle;
+  export function create_gap_with_duration(duration: OTIORationalTime, name: string): Handle;
+  export function delete_gap(handle: Handle): void;
+  export function gap_to_json_string(handle: Handle): string;
+
+  // Editing operations utilities
+  export interface EditingOperations {
+    ReferencePoint: {
+      SOURCE: "Source";
+      SEQUENCE: "Sequence";
+      FIT: "Fit";
+    };
+    TrimMode: {
+      RIPPLE: "ripple";
+      ROLL: "roll";
+      SLIP: "slip";
+      SLIDE: "slide";
+    };
+    createGap(duration: OTIORationalTime, name?: string): Gap;
+    createTimeRange(startTime: OTIORationalTime, duration: OTIORationalTime): OTIOTimeRange;
+    createRationalTime(value: number, rate?: number): OTIORationalTime;
+  }
 } 

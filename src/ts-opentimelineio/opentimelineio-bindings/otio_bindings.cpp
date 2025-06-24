@@ -11,6 +11,7 @@
 #include "opentimelineio/clip.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/externalReference.h"
+#include "opentimelineio/gap.h"
 #include "opentimelineio/serialization.h"
 #include "opentimelineio/deserialization.h"
 #include "opentimelineio/anyDictionary.h"
@@ -19,6 +20,7 @@
 #include "opentimelineio/item.h"
 #include "opentimelineio/composition.h"
 #include "opentimelineio/mediaReference.h"
+#include "opentimelineio/algo/editAlgorithm.h"
 #include "opentime/rationalTime.h"
 #include "opentime/timeRange.h"
 #include "opentime/timeTransform.h"
@@ -158,28 +160,48 @@ EMSCRIPTEN_BINDINGS(otio_core) {
     // Cleanup functions (IMPORTANT: Use these to properly dispose of objects!)
     function("delete_timeline", +[](size_t ptr) {
         if (ptr == 0) return;
-        Timeline* obj = reinterpret_cast<Timeline*>(ptr);
-        if (obj) obj->possibly_delete();
+        try {
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            if (obj) obj->possibly_delete();
+        } catch (...) {
+            // Ignore disposal errors (object may already be cleaned up)
+        }
     });
     function("delete_track", +[](size_t ptr) {
         if (ptr == 0) return;
-        Track* obj = reinterpret_cast<Track*>(ptr);
-        if (obj) obj->possibly_delete();
+        try {
+            Track* obj = reinterpret_cast<Track*>(ptr);
+            if (obj) obj->possibly_delete();
+        } catch (...) {
+            // Ignore disposal errors (object may already be cleaned up)
+        }
     });
     function("delete_clip", +[](size_t ptr) {
         if (ptr == 0) return;
-        Clip* obj = reinterpret_cast<Clip*>(ptr);
-        if (obj) obj->possibly_delete();
+        try {
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            if (obj) obj->possibly_delete();
+        } catch (...) {
+            // Ignore disposal errors (object may already be cleaned up)
+        }
     });
     function("delete_external_reference", +[](size_t ptr) {
         if (ptr == 0) return;
-        ExternalReference* obj = reinterpret_cast<ExternalReference*>(ptr);
-        if (obj) obj->possibly_delete();
+        try {
+            ExternalReference* obj = reinterpret_cast<ExternalReference*>(ptr);
+            if (obj) obj->possibly_delete();
+        } catch (...) {
+            // Ignore disposal errors (object may already be cleaned up)
+        }
     });
     function("delete_stack", +[](size_t ptr) {
         if (ptr == 0) return;
-        Stack* obj = reinterpret_cast<Stack*>(ptr);
-        if (obj) obj->possibly_delete();
+        try {
+            Stack* obj = reinterpret_cast<Stack*>(ptr);
+            if (obj) obj->possibly_delete();
+        } catch (...) {
+            // Ignore disposal errors (object may already be cleaned up)
+        }
     });
     
     // Timeline utility functions (using size_t to avoid type issues)
@@ -502,6 +524,283 @@ EMSCRIPTEN_BINDINGS(otio_core) {
             if (ptr == 0) return "";
             SerializableObject* obj = reinterpret_cast<SerializableObject*>(ptr);
             return obj ? obj->schema_name() : ""; 
+        });
+    
+    // Advanced editing algorithm bindings
+    function("timeline_overwrite_clip", 
+        +[](size_t timelinePtr, size_t clipPtr, const TimeRange& range, bool removeTransitions) -> bool {
+            if (timelinePtr == 0 || clipPtr == 0) return false;
+            Timeline* timeline = reinterpret_cast<Timeline*>(timelinePtr);
+            Clip* clip = reinterpret_cast<Clip*>(clipPtr);
+            if (!timeline || !clip) return false;
+            
+            // Get the first video track for simplicity
+            auto videoTracks = timeline->video_tracks();
+            if (videoTracks.empty()) return false;
+            
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            opentimelineio::OPENTIMELINEIO_VERSION::algo::overwrite(
+                clip, videoTracks[0], range, removeTransitions, nullptr, &error);
+            return !opentimelineio::OPENTIMELINEIO_VERSION::is_error(&error);
+        });
+    
+    function("timeline_insert_clip", 
+        +[](size_t timelinePtr, size_t clipPtr, const RationalTime& time, bool removeTransitions) -> bool {
+            if (timelinePtr == 0 || clipPtr == 0) return false;
+            Timeline* timeline = reinterpret_cast<Timeline*>(timelinePtr);
+            Clip* clip = reinterpret_cast<Clip*>(clipPtr);
+            if (!timeline || !clip) return false;
+            
+            auto videoTracks = timeline->video_tracks();
+            if (videoTracks.empty()) return false;
+            
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            opentimelineio::OPENTIMELINEIO_VERSION::algo::insert(
+                clip, videoTracks[0], time, removeTransitions, nullptr, &error);
+            return !opentimelineio::OPENTIMELINEIO_VERSION::is_error(&error);
+        });
+    
+    function("timeline_slice_at_time", 
+        +[](size_t timelinePtr, const RationalTime& time, bool removeTransitions) -> bool {
+            if (timelinePtr == 0) return false;
+            Timeline* timeline = reinterpret_cast<Timeline*>(timelinePtr);
+            if (!timeline) return false;
+            
+            auto videoTracks = timeline->video_tracks();
+            if (videoTracks.empty()) return false;
+            
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            opentimelineio::OPENTIMELINEIO_VERSION::algo::slice(
+                videoTracks[0], time, removeTransitions, &error);
+            return !opentimelineio::OPENTIMELINEIO_VERSION::is_error(&error);
+        });
+    
+    function("clip_trim", 
+        +[](size_t clipPtr, const RationalTime& deltaIn, const RationalTime& deltaOut) -> bool {
+            if (clipPtr == 0) return false;
+            Clip* clip = reinterpret_cast<Clip*>(clipPtr);
+            if (!clip) return false;
+            
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            opentimelineio::OPENTIMELINEIO_VERSION::algo::trim(
+                clip, deltaIn, deltaOut, nullptr, &error);
+            return !opentimelineio::OPENTIMELINEIO_VERSION::is_error(&error);
+        });
+    
+    function("clip_slip", 
+        +[](size_t clipPtr, const RationalTime& delta) {
+            if (clipPtr == 0) return;
+            Clip* clip = reinterpret_cast<Clip*>(clipPtr);
+            if (!clip) return;
+            
+            opentimelineio::OPENTIMELINEIO_VERSION::algo::slip(clip, delta);
+        });
+    
+    function("clip_slide", 
+        +[](size_t clipPtr, const RationalTime& delta) {
+            if (clipPtr == 0) return;
+            Clip* clip = reinterpret_cast<Clip*>(clipPtr);
+            if (!clip) return;
+            
+            opentimelineio::OPENTIMELINEIO_VERSION::algo::slide(clip, delta);
+        });
+    
+    // Effects and Markers support
+    function("clip_effects_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            return obj ? static_cast<int>(obj->effects().size()) : 0; 
+        });
+    
+    function("clip_markers_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            return obj ? static_cast<int>(obj->markers().size()) : 0; 
+        });
+    
+    function("track_effects_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Track* obj = reinterpret_cast<Track*>(ptr);
+            return obj ? static_cast<int>(obj->effects().size()) : 0; 
+        });
+    
+    function("track_markers_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Track* obj = reinterpret_cast<Track*>(ptr);
+            return obj ? static_cast<int>(obj->markers().size()) : 0; 
+        });
+    
+    // Advanced clip properties
+    function("clip_available_range", 
+        +[](size_t ptr) -> TimeRange { 
+            if (ptr == 0) return TimeRange();
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            if (!obj) return TimeRange();
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            return obj->available_range(&error);
+        });
+    
+    function("clip_trimmed_range", 
+        +[](size_t ptr) -> TimeRange { 
+            if (ptr == 0) return TimeRange();
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            if (!obj) return TimeRange();
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            return obj->trimmed_range(&error);
+        });
+    
+    function("clip_visible_range", 
+        +[](size_t ptr) -> TimeRange { 
+            if (ptr == 0) return TimeRange();
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            if (!obj) return TimeRange();
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            return obj->visible_range(&error);
+        });
+    
+    // Media reference advanced properties
+    function("external_reference_available_range", 
+        +[](size_t ptr) -> TimeRange { 
+            if (ptr == 0) return TimeRange();
+            ExternalReference* obj = reinterpret_cast<ExternalReference*>(ptr);
+            if (!obj) return TimeRange();
+            auto range = obj->available_range();
+            return range.has_value() ? range.value() : TimeRange();
+        });
+    
+    function("external_reference_set_available_range", 
+        +[](size_t ptr, const TimeRange& range) { 
+            if (ptr == 0) return;
+            ExternalReference* obj = reinterpret_cast<ExternalReference*>(ptr);
+            if (obj) obj->set_available_range(range); 
+        });
+    
+    // Timeline-level operations
+    function("timeline_global_start_time", 
+        +[](size_t ptr) -> RationalTime { 
+            if (ptr == 0) return RationalTime();
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            if (!obj) return RationalTime();
+            auto time = obj->global_start_time();
+            return time.has_value() ? time.value() : RationalTime();
+        });
+    
+    function("timeline_set_global_start_time", 
+        +[](size_t ptr, const RationalTime& time) { 
+            if (ptr == 0) return;
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            if (obj) obj->set_global_start_time(time); 
+        });
+    
+    // Audio tracks access
+    function("timeline_audio_tracks_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            if (!obj) return 0;
+            auto tracks = obj->audio_tracks();
+            return static_cast<int>(tracks.size());
+        });
+    
+    function("timeline_audio_track_at_index", 
+        +[](size_t ptr, int index) -> size_t { 
+            if (ptr == 0) return 0;
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            if (!obj) return 0;
+            auto tracks = obj->audio_tracks();
+            if (index < 0 || index >= static_cast<int>(tracks.size())) return 0;
+            return reinterpret_cast<size_t>(tracks[index]);
+        });
+    
+    // Video tracks access
+    function("timeline_video_tracks_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            if (!obj) return 0;
+            auto tracks = obj->video_tracks();
+            return static_cast<int>(tracks.size());
+        });
+    
+    function("timeline_video_track_at_index", 
+        +[](size_t ptr, int index) -> size_t { 
+            if (ptr == 0) return 0;
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            if (!obj) return 0;
+            auto tracks = obj->video_tracks();
+            if (index < 0 || index >= static_cast<int>(tracks.size())) return 0;
+            return reinterpret_cast<size_t>(tracks[index]);
+        });
+    
+    // Advanced track operations
+    function("track_available_range", 
+        +[](size_t ptr) -> TimeRange { 
+            if (ptr == 0) return TimeRange();
+            Track* obj = reinterpret_cast<Track*>(ptr);
+            if (!obj) return TimeRange();
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            return obj->available_range(&error);
+        });
+    
+    function("track_range_of_child_at_index", 
+        +[](size_t ptr, int index) -> TimeRange { 
+            if (ptr == 0) return TimeRange();
+            Track* obj = reinterpret_cast<Track*>(ptr);
+            if (!obj) return TimeRange();
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            return obj->range_of_child_at_index(index, &error);
+        });
+    
+    function("track_trimmed_range_of_child_at_index", 
+        +[](size_t ptr, int index) -> TimeRange { 
+            if (ptr == 0) return TimeRange();
+            Track* obj = reinterpret_cast<Track*>(ptr);
+            if (!obj) return TimeRange();
+            opentimelineio::OPENTIMELINEIO_VERSION::ErrorStatus error;
+            return obj->trimmed_range_of_child_at_index(index, &error);
+        });
+    
+    // Gap creation and handling
+    function("create_gap", +[](const TimeRange& sourceRange, const std::string& name) -> size_t {
+        Gap* gap = new Gap(sourceRange, name);
+        SerializableObject::Retainer<Gap> retainer(gap);
+        return reinterpret_cast<size_t>(retainer.take_value());
+    });
+    
+    function("create_gap_with_duration", +[](const RationalTime& duration, const std::string& name) -> size_t {
+        Gap* gap = new Gap(duration, name);
+        SerializableObject::Retainer<Gap> retainer(gap);
+        return reinterpret_cast<size_t>(retainer.take_value());
+    });
+    
+    function("delete_gap", +[](size_t ptr) {
+        if (ptr == 0) return;
+        try {
+            Gap* obj = reinterpret_cast<Gap*>(ptr);
+            if (obj) obj->possibly_delete();
+        } catch (...) {
+            // Ignore disposal errors (object may already be cleaned up)
+        }
+    });
+    
+    function("gap_to_json_string", 
+        +[](size_t ptr) -> std::string { 
+            if (ptr == 0) return "null";
+            Gap* obj = reinterpret_cast<Gap*>(ptr);
+            if (!obj) return "null";
+            
+            try {
+                SerializableObject::Retainer<Gap> temp_retainer(obj);
+                std::string result = obj->to_json_string();
+                temp_retainer.take_value();
+                return result;
+            } catch (...) {
+                return "null";
+            }
         });
     
     // Test functions

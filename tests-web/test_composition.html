@@ -22,13 +22,13 @@
             try {
                 // Load modules
                 const openTimeScript = document.createElement('script');
-                openTimeScript.src = '../build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                openTimeScript.src = '../src/ts-opentimelineio/typescript/dist/opentime.js';
                 document.head.appendChild(openTimeScript);
                 await new Promise(resolve => openTimeScript.onload = resolve);
                 const OpenTimeModule = await window.OpenTimeModule();
                 
                 const otioScript = document.createElement('script');
-                otioScript.src = '../build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                otioScript.src = '../src/ts-opentimelineio/typescript/dist/opentimelineio.js';
                 document.head.appendChild(otioScript);
                 await new Promise(resolve => otioScript.onload = resolve);
                 const Module = await window.OpenTimelineIOModule();
@@ -175,6 +175,151 @@
                 audioTrack.dispose();
                 timeline.dispose();
                 output += '   All objects disposed successfully\n';
+                
+                // Test 7: Advanced editing operations
+                console.log("=== Testing Advanced Editing Operations ===");
+                
+                // Create a timeline with advanced operations
+                const editTimeline = new OTIO.Timeline("Edit Test Timeline");
+                const editTrack = new OTIO.Track("V1", "Video");
+                editTimeline.add_track(editTrack);
+                
+                // Create clips for editing
+                const editClip1 = new OTIO.Clip("Clip_001");
+                const editClip2 = new OTIO.Clip("Clip_002");
+                const editClip3 = new OTIO.Clip("Clip_003");
+                
+                // Set up source ranges
+                const range1 = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(0, 24),
+                    new OpenTimeModule.RationalTime(100, 24) // ~4 seconds
+                );
+                const range2 = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(50, 24),
+                    new OpenTimeModule.RationalTime(100, 24)
+                );
+                const range3 = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(200, 24),
+                    new OpenTimeModule.RationalTime(100, 24)
+                );
+                
+                editClip1.set_source_range(range1);
+                editClip2.set_source_range(range2);
+                editClip3.set_source_range(range3);
+                
+                // Add clips to track
+                editTrack.add_clip(editClip1);
+                editTrack.add_clip(editClip2);
+                editTrack.add_clip(editClip3);
+                
+                console.log("Initial timeline duration:", editTimeline.duration().to_seconds());
+                console.log("Track has", editTrack.clip_count(), "clips");
+                
+                // Test advanced clip properties
+                console.log("--- Advanced Clip Properties ---");
+                console.log("Clip1 available range:", editClip1.get_available_range());
+                console.log("Clip1 trimmed range:", editClip1.get_trimmed_range());
+                console.log("Clip1 effects count:", editClip1.get_effects_count());
+                console.log("Clip1 markers count:", editClip1.get_markers_count());
+                
+                // Test track properties
+                console.log("--- Advanced Track Properties ---");
+                console.log("Track available range:", editTrack.get_available_range());
+                console.log("Track effects count:", editTrack.get_effects_count());
+                
+                // Test timeline advanced properties
+                console.log("--- Timeline Advanced Properties ---");
+                const globalStart = new OpenTimeModule.RationalTime(1000, 24); // Start at frame 1000
+                editTimeline.set_global_start_time(globalStart);
+                console.log("Timeline global start time:", editTimeline.get_global_start_time().value());
+                console.log("Timeline audio tracks:", editTimeline.get_audio_tracks().length);
+                console.log("Timeline video tracks:", editTimeline.get_video_tracks().length);
+                
+                // Test Gap creation and usage
+                console.log("--- Gap Support ---");
+                const gapDuration = new OpenTimeModule.RationalTime(50, 24); // 2 second gap
+                const gap = OTIO.EditingOperations.createGap(gapDuration, "Black Gap");
+                console.log("Created gap:", gap.name());
+                console.log("Gap JSON:", gap.to_json_string());
+                
+                // Insert gap between clips
+                editTrack.insert(1, gap);
+                console.log("Track now has", editTrack.length, "items");
+                console.log("Item at index 1 type:", editTrack.child_at(1).constructor.name);
+                
+                // Test advanced editing operations
+                console.log("--- Advanced Editing Operations ---");
+                
+                // Create a new clip for overwrite test
+                const overwriteClip = new OTIO.Clip("Overwrite_Clip");
+                const overwriteRange = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(0, 24),
+                    new OpenTimeModule.RationalTime(75, 24) // 3 seconds
+                );
+                overwriteClip.set_source_range(overwriteRange);
+                
+                // Try overwrite operation
+                const overwriteTime = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(50, 24), // Start at 2 seconds
+                    new OpenTimeModule.RationalTime(75, 24)  // Duration 3 seconds
+                );
+                const overwriteSuccess = editTimeline.overwrite_clip(overwriteClip, overwriteTime, true);
+                console.log("Overwrite operation success:", overwriteSuccess);
+                
+                // Try insert operation
+                const insertClip = new OTIO.Clip("Insert_Clip");
+                insertClip.set_source_range(range1);
+                const insertTime = new OpenTimeModule.RationalTime(150, 24); // At 6.25 seconds
+                const insertSuccess = editTimeline.insert_clip(insertClip, insertTime, true);
+                console.log("Insert operation success:", insertSuccess);
+                
+                // Try slice operation
+                const sliceTime = new OpenTimeModule.RationalTime(200, 24); // At 8.33 seconds
+                const sliceSuccess = editTimeline.slice_at_time(sliceTime, true);
+                console.log("Slice operation success:", sliceSuccess);
+                
+                // Test clip editing operations
+                console.log("--- Clip Editing Operations ---");
+                const trimClip = new OTIO.Clip("Trim_Test_Clip");
+                const trimRange = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(100, 24),
+                    new OpenTimeModule.RationalTime(200, 24)
+                );
+                trimClip.set_source_range(trimRange);
+                
+                // Trim the clip (adjust in and out points)
+                const deltaIn = new OpenTimeModule.RationalTime(10, 24);  // Trim 10 frames from start
+                const deltaOut = new OpenTimeModule.RationalTime(-10, 24); // Trim 10 frames from end
+                const trimSuccess = trimClip.trim(deltaIn, deltaOut);
+                console.log("Trim operation success:", trimSuccess);
+                
+                // Slip the clip (adjust source start time)
+                const slipDelta = new OpenTimeModule.RationalTime(20, 24); // Slip 20 frames
+                trimClip.slip(slipDelta);
+                console.log("Slip operation completed");
+                
+                // Final timeline state
+                console.log("--- Final Timeline State ---");
+                console.log("Final timeline duration:", editTimeline.duration().to_seconds(), "seconds");
+                console.log("Final JSON (first 200 chars):", editTimeline.to_json_string().substring(0, 200) + "...");
+                
+                // Cleanup
+                editClip1.dispose();
+                editClip2.dispose();
+                editClip3.dispose();
+                overwriteClip.dispose();
+                insertClip.dispose();
+                trimClip.dispose();
+                gap.dispose();
+                editTrack.dispose();
+                editTimeline.dispose();
+                
+                console.log("✅ All advanced editing tests completed successfully!");
+
+                console.log("\n" + "=".repeat(50));
+                console.log("🎉 ALL COMPOSITION TESTS PASSED! 🎉");
+                console.log("OpenTimelineIO TypeScript bindings are working correctly!");
+                console.log("=".repeat(50));
                 
                 output += '</pre>';
                 

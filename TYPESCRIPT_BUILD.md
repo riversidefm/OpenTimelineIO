@@ -235,16 +235,46 @@ npm publish
 
 ## Testing
 
-To test the TypeScript bindings, you need to serve the test files over HTTP (WASM modules cannot be loaded from `file://` URLs).
+### Prerequisites: Rebuild After Changes
+When changes are made to the C++ bindings or wrapper code, always rebuild before testing:
 
-Start a simple HTTP server from the project root:
+
 ```bash
-npx http-server -p 8000
+emcmake cmake -B build-wasm -S . -DOTIO_TYPESCRIPT_INSTALL=ON
+cmake --build build-wasm
+cd src/ts-opentimelineio/typescript
+npm run build
+cd ../../../
 ```
 
-Then open your browser and navigate to:
-- `http://localhost:8000/tests-web/test_typescript_bindings.html` - Comprehensive test suite
-- `http://localhost:8000/tests-web/test_timeline_operations.html` - Diagnostic test
+### Running Browser Tests
+To test the TypeScript bindings, serve the test files over HTTP (WASM modules cannot be loaded from `file://` URLs):
+
+1. **Start HTTP Server from project root:**
+   ```bash
+   npx http-server -p 8000
+   ```
+
+2. **Open test pages in browser:**
+   - `http://localhost:8000/tests-web/test_composition.html` - **Primary test suite** with full composition and advanced editing operations
+   - `http://localhost:8000/tests-web/test_typescript_bindings.html` - Basic bindings test (if available)
+
+### Expected Test Results
+A successful test run should show:
+- ✅ Both WASM modules loading without errors
+- ✅ Timeline creation and track management
+- ✅ Clip creation and time range operations
+- ✅ Advanced editing operations (overwrite, insert, slice, trim, slip, slide)
+- ✅ Gap creation and management
+- ✅ Type conversion between OpenTime and OTIO formats
+- ✅ JSON serialization and object introspection
+- ✅ Proper object disposal without "table index out of bounds" errors
+
+### Troubleshooting Test Issues
+- **WASM loading errors**: Check browser console and ensure files exist in `dist/` directory
+- **"Module.function_name is not a function"**: Rebuild WASM modules - new functions may not be compiled
+- **Type conversion errors**: Check for proper OpenTime ↔ OTIO type handling in wrappers
+- **Memory disposal errors**: Verify all objects are properly disposed in test cleanup
 
 ## Examples
 
@@ -253,26 +283,6 @@ See the following files for usage examples:
 - `examples/typescript_example.ts` - Comprehensive TypeScript usage example
 - `tests-web/test_typescript_bindings.html` - Browser-based comprehensive test suite
 - `tests-web/test_timeline_operations.html` - Browser-based diagnostic test
-
-## Complete Build Workflow
-
-```bash
-# 1. Build WASM modules
-emcmake cmake -B build-wasm -S . -DOTIO_TYPESCRIPT_INSTALL=ON
-cmake --build build-wasm
-
-# 2. Prepare NPM package
-cd src/ts-opentimelineio/typescript
-npm run build
-
-# 3. Test package
-npm pack --dry-run
-
-# 4. (Optional) Publish
-npm publish
-```
-
-That's it! These commands are all you need for the complete TypeScript bindings workflow.
 
 ## Contributing
 
