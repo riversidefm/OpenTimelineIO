@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Timeline Operations Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 10px 0; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Timeline Operations Test</h1>
+    <div id="results">Loading...</div>
+
+    <script>
+        async function testTimelineOperations() {
+            const results = document.getElementById('results');
+            let output = '';
+            
+            try {
+                // Load both modules
+                const openTimeScript = document.createElement('script');
+                openTimeScript.src = 'build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                document.head.appendChild(openTimeScript);
+                await new Promise(resolve => openTimeScript.onload = resolve);
+                const OpenTimeModule = await window.OpenTimeModule();
+                
+                const otioScript = document.createElement('script');
+                otioScript.src = 'build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                document.head.appendChild(otioScript);
+                await new Promise(resolve => otioScript.onload = resolve);
+                const Module = await window.OpenTimelineIOModule();
+                window.Module = Module;
+                
+                const wrapperScript = document.createElement('script');
+                wrapperScript.src = 'src/ts-opentimelineio/typescript/wrappers.js';
+                document.head.appendChild(wrapperScript);
+                await new Promise(resolve => wrapperScript.onload = resolve);
+                
+                output += '<h3>Testing specific Timeline operations:</h3><pre>';
+                
+                // Test 1: Create and immediately dispose (baseline)
+                output += '1. Create and immediately dispose:\n';
+                try {
+                    const t1 = new window.OTIO.Timeline("Test1");
+                    t1.dispose();
+                    output += '   ✅ Success\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 2: Access name() then dispose
+                output += '2. Access name() then dispose:\n';
+                try {
+                    const t2 = new window.OTIO.Timeline("Test2");
+                    const name = t2.name();
+                    output += `   Name: "${name}"\n`;
+                    t2.dispose();
+                    output += '   ✅ Success\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 3: Access schema_name() then dispose
+                output += '3. Access schema_name() then dispose:\n';
+                try {
+                    const t3 = new window.OTIO.Timeline("Test3");
+                    const schema = t3.schema_name();
+                    output += `   Schema: "${schema}"\n`;
+                    t3.dispose();
+                    output += '   ✅ Success\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 4: Access schema_version() then dispose
+                output += '4. Access schema_version() then dispose:\n';
+                try {
+                    const t4 = new window.OTIO.Timeline("Test4");
+                    const version = t4.schema_version();
+                    output += `   Version: ${version}\n`;
+                    t4.dispose();
+                    output += '   ✅ Success\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 5: Access duration() then dispose
+                output += '5. Access duration() then dispose:\n';
+                try {
+                    const t5 = new window.OTIO.Timeline("Test5");
+                    const duration = t5.duration();
+                    output += `   Duration: ${duration.value()}/${duration.rate()}\n`;
+                    t5.dispose();
+                    output += '   ✅ Success\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 6: Access to_json_string() then dispose (THE PREVIOUSLY PROBLEMATIC ONE)
+                output += '6. Access to_json_string() then dispose (FIXED):\n';
+                try {
+                    const t6 = new window.OTIO.Timeline("Test6");
+                    const json = t6.to_json_string();
+                    output += `   JSON length: ${json.length}\n`;
+                    t6.dispose();
+                    output += '   ✅ Success - to_json_string disposal now works!\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 7: Modify name then dispose
+                output += '7. Modify name then dispose:\n';
+                try {
+                    const t7 = new window.OTIO.Timeline("Test7");
+                    t7.set_name("Modified Test7");
+                    const newName = t7.name();
+                    output += `   Modified name: "${newName}"\n`;
+                    t7.dispose();
+                    output += '   ✅ Success\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 8: All operations like the main test (SHOULD NOW WORK)
+                output += '8. All operations (like main test - FIXED):\n';
+                try {
+                    const t8 = new window.OTIO.Timeline("Test8");
+                    output += `   Name: "${t8.name()}"\n`;
+                    output += `   Schema: "${t8.schema_name()}"\n`;
+                    output += `   Version: ${t8.schema_version()}\n`;
+                    const duration = t8.duration();
+                    output += `   Duration: ${duration.value()}/${duration.rate()}\n`;
+                    const json = t8.to_json_string();
+                    output += `   JSON length: ${json.length}\n`;
+                    t8.dispose();
+                    output += '   ✅ Success - Full Timeline lifecycle now works!\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                // Test 9: Multiple timelines with JSON operations
+                output += '9. Multiple timelines with JSON (stress test):\n';
+                try {
+                    const timelines = [];
+                    for (let i = 0; i < 5; i++) {
+                        const t = new window.OTIO.Timeline(`StressTest${i}`);
+                        t.to_json_string(); // This used to break disposal
+                        timelines.push(t);
+                    }
+                    
+                    // Dispose all
+                    for (let i = 0; i < timelines.length; i++) {
+                        timelines[i].dispose();
+                    }
+                    output += '   ✅ Success - Multiple JSON operations work!\n\n';
+                } catch (e) {
+                    output += `   ❌ Failed: ${e.message}\n\n`;
+                }
+                
+                output += '</pre>';
+                
+                if (output.includes('❌')) {
+                    results.innerHTML = `<div class="error">Some tests failed</div>${output}`;
+                } else {
+                    results.innerHTML = `<div class="success">🎉 All Timeline operations work perfectly!</div>${output}`;
+                }
+                
+            } catch (error) {
+                results.innerHTML = `<div class="error">Test failed: ${error.message}</div>`;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', testTimelineOperations);
+    </script>
+</body>
+</html> 

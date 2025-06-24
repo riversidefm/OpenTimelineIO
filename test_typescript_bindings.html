@@ -92,8 +92,19 @@
                     console.log('OpenTimelineIO script loaded');
                     window.OpenTimelineIOModule().then(module => {
                         OpenTimelineIOModuleInstance = module;
+                        // Make Module globally available for wrapper classes
+                        window.Module = module;
                         console.log('OpenTimelineIO module initialized');
-                        resolve();
+                        
+                        // Load wrapper classes
+                        const wrapperScript = document.createElement('script');
+                        wrapperScript.src = 'src/ts-opentimelineio/typescript/wrappers.js';
+                        wrapperScript.onload = () => {
+                            console.log('Wrapper classes loaded');
+                            resolve();
+                        };
+                        wrapperScript.onerror = reject;
+                        document.head.appendChild(wrapperScript);
                     }).catch(reject);
                 };
                 script.onerror = reject;
@@ -172,34 +183,50 @@
                 output += `<h3>Core OTIO Objects:</h3>`;
                 output += `<pre>`;
                 
-                // Create a timeline
-                const timeline = OpenTimelineIOModuleInstance.create_timeline("My Timeline");
-                output += `Created Timeline: "${timeline.name()}"\n`;
-                output += `  Schema: ${timeline.schema_name()}\n`;
-                output += `  Version: ${timeline.schema_version()}\n\n`;
+                // Test Timeline creation multiple times to see if it's a creation issue
+                output += `Testing Timeline creation...\n`;
+                let timeline = null;
+                let hasDisposalError = false;
+                try {
+                    timeline = new window.OTIO.Timeline("My Timeline");
+                    output += `Created Timeline: "${timeline.name()}"\n`;
+                    output += `  Schema: ${timeline.schema_name()}\n`;
+                    output += `  Version: ${timeline.schema_version()}\n`;
+                    output += `  Internal handle: ${timeline._handle}\n`;
+                    
+                    // Try creating a second timeline
+                    const timeline2 = new window.OTIO.Timeline("Second Timeline");
+                    output += `Created second Timeline: "${timeline2.name()}"\n`;
+                    output += `  Second timeline handle: ${timeline2._handle}\n`;
+                    
+                    // Dispose the second timeline first (test disposal on a fresh object)
+                    output += `Attempting to dispose second timeline...\n`;
+                    timeline2.dispose();
+                    output += `Second timeline disposed successfully\n`;
+                    
+                } catch (createError) {
+                    output += `Timeline creation/disposal error: ${createError.message}\n`;
+                    console.error('Timeline creation/disposal error:', createError);
+                    hasDisposalError = true;
+                }
+                output += `\n`;
                 
                 // Create a track
-                const track = OpenTimelineIOModuleInstance.create_track("V1", "Video");
+                const track = new window.OTIO.Track("V1", "Video");
                 output += `Created Track: "${track.name()}"\n`;
                 output += `  Kind: ${track.kind()}\n`;
                 output += `  Enabled: ${track.enabled()}\n\n`;
                 
-                // Create a clip
-                const clip = OpenTimelineIOModuleInstance.create_clip("My Clip");
+                // Create a clip (without time operations for now)
+                const clip = new window.OTIO.Clip("My Clip");
                 output += `Created Clip: "${clip.name()}"\n`;
+                output += `  Enabled: ${clip.enabled()}\n`;
                 
-                // Set source range for the clip
-                const clipRange = new OpenTimeModuleInstance.TimeRange(
-                    new OpenTimeModuleInstance.RationalTime(0, 24),
-                    new OpenTimeModuleInstance.RationalTime(120, 24)  // 5 seconds
-                );
-                clip.set_source_range(clipRange);
-                const retrievedRange = clip.source_range();
-                output += `  Source Range: ${retrievedRange.start_time.value()}/${retrievedRange.start_time.rate()} for ${retrievedRange.duration.value()}/${retrievedRange.duration.rate()}\n`;
-                output += `  Duration: ${clip.duration().value()}/${clip.duration().rate()}\n\n`;
+                // Skip time range operations for this test to isolate the disposal issue
+                output += `  Skipping time range operations to isolate disposal issue\n\n`;
                 
                 // Create an external reference
-                const mediaRef = OpenTimelineIOModuleInstance.create_external_reference("file:///path/to/media.mov");
+                const mediaRef = new window.OTIO.ExternalReference("file:///path/to/media.mov");
                 output += `Created ExternalReference: "${mediaRef.target_url()}"\n`;
                 output += `  Is missing: ${mediaRef.is_missing_reference()}\n\n`;
                 
@@ -212,8 +239,39 @@
                 
                 // Test JSON serialization
                 output += `JSON Serialization:\n`;
-                const jsonString = OpenTimelineIOModuleInstance.serialize_json_to_string(timeline);
-                output += `Timeline JSON (truncated): ${jsonString.substring(0, 100)}...\n`;
+                const timelineJson = timeline.to_json_string();
+                output += `Timeline JSON (truncated): ${timelineJson.substring(0, 100)}...\n`;
+                
+                // Clean up objects in reverse creation order
+                output += `\nTesting disposal:\n`;
+                try {
+                    output += `Disposing media reference...\n`;
+                    mediaRef.dispose();
+                    output += `Media reference disposed successfully\n`;
+                    
+                    output += `Disposing clip...\n`;
+                    clip.dispose();
+                    output += `Clip disposed successfully\n`;
+                    
+                    output += `Disposing track...\n`;
+                    track.dispose();
+                    output += `Track disposed successfully\n`;
+                    
+                    if (timeline && !hasDisposalError) {
+                        output += `Disposing main timeline...\n`;
+                        timeline.dispose();
+                        output += `Main timeline disposed successfully\n`;
+                    } else if (hasDisposalError) {
+                        output += `Skipping main timeline disposal due to previous error\n`;
+                    } else {
+                        output += `Timeline was null, skipping disposal\n`;
+                    }
+                    
+                    output += `All objects properly disposed.\n`;
+                } catch (disposeError) {
+                    output += `Disposal error: ${disposeError.message}\n`;
+                    console.error('Disposal error:', disposeError);
+                }
                 
                 output += `</pre>`;
                 

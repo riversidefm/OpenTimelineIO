@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTIO Only Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 10px 0; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>OpenTimelineIO Only Test</h1>
+    <div id="results">Loading...</div>
+
+    <script>
+        async function testOTIOOnly() {
+            const results = document.getElementById('results');
+            let output = '';
+            
+            try {
+                // Load OpenTimelineIO module only
+                output += 'Loading OpenTimelineIO module...<br>';
+                
+                const script = document.createElement('script');
+                script.src = 'build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                
+                output += 'Script loaded<br>';
+                
+                const Module = await window.OpenTimelineIOModule();
+                window.Module = Module; // Make available for wrappers
+                output += 'Module initialized<br>';
+                
+                // Load wrapper classes
+                const wrapperScript = document.createElement('script');
+                wrapperScript.src = 'src/ts-opentimelineio/typescript/wrappers.js';
+                
+                await new Promise((resolve, reject) => {
+                    wrapperScript.onload = resolve;
+                    wrapperScript.onerror = reject;
+                    document.head.appendChild(wrapperScript);
+                });
+                
+                output += 'Wrappers loaded<br>';
+                
+                // Test basic functionality
+                output += '<h3>Testing Basic Functions:</h3>';
+                const version = Module.get_version();
+                const connected = Module.test_connection();
+                output += `Version: ${version}<br>`;
+                output += `Connection test: ${connected}<br>`;
+                
+                // Test Timeline creation and methods
+                output += '<h3>Testing Timeline:</h3>';
+                const timeline = new window.OTIO.Timeline("Browser Test Timeline");
+                output += `Created Timeline: "${timeline.name()}"<br>`;
+                output += `Schema: ${timeline.schema_name()}<br>`;
+                output += `Version: ${timeline.schema_version()}<br>`;
+                
+                // Test Timeline modification
+                timeline.set_name("Modified Timeline");
+                output += `Modified name: "${timeline.name()}"<br>`;
+                
+                // Test Clip creation
+                output += '<h3>Testing Clip:</h3>';
+                const clip = new window.OTIO.Clip("Test Clip");
+                output += `Created Clip: "${clip.name()}"<br>`;
+                
+                // Create time range using OpenTimelineIO module's time types
+                const timeRange = new Module.OTIOTimeRange(
+                    new Module.OTIORationalTime(0, 24),
+                    new Module.OTIORationalTime(100, 24)
+                );
+                clip.set_source_range(timeRange);
+                const retrievedRange = clip.source_range();
+                output += `Clip source range: ${retrievedRange.start_time.value()}/${retrievedRange.start_time.rate()} for ${retrievedRange.duration.value()}/${retrievedRange.duration.rate()}<br>`;
+                
+                // Test disposal (this is where the error was occurring)
+                output += '<h3>Testing Disposal:</h3>';
+                output += 'Disposing clip...<br>';
+                clip.dispose();
+                output += 'Clip disposed successfully<br>';
+                
+                output += 'Disposing timeline...<br>';
+                timeline.dispose();
+                output += 'Timeline disposed successfully<br>';
+                
+                output += '<div class="success"><strong>All tests passed!</strong></div>';
+                
+            } catch (error) {
+                output += `<div class="error"><strong>Error: ${error.message}</strong><br>`;
+                output += `Stack: ${error.stack}</div>`;
+                console.error('Test failed:', error);
+            }
+            
+            results.innerHTML = output;
+        }
+        
+        document.addEventListener('DOMContentLoaded', testOTIOOnly);
+    </script>
+</body>
+</html> 
