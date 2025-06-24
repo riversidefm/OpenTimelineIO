@@ -32,16 +32,23 @@ function wrapObject(handle) {
     if (!handle) return null;
     
     const schemaName = Module.get_object_schema_name(handle);
+    console.log('Wrapping object with schema:', schemaName);
+    
     switch (schemaName) {
         case 'Timeline.1':
+        case 'Timeline':
             return Timeline._fromHandle(handle);
         case 'Track.1':
+        case 'Track':
             return Track._fromHandle(handle);
         case 'Clip.1':
+        case 'Clip':
             return Clip._fromHandle(handle);
         case 'Stack.1':
+        case 'Stack':
             return Stack._fromHandle(handle);
         case 'ExternalReference.1':
+        case 'ExternalReference':
             return ExternalReference._fromHandle(handle);
         default:
             console.warn('Unknown schema type:', schemaName);
@@ -120,9 +127,15 @@ class Timeline {
     }
     
     dispose() {
-        if (this._handle) {
-            Module.delete_timeline(this._handle);
-            this._handle = null;
+        if (this._handle && this._handle !== 0) {
+            try {
+                console.log('Disposing timeline with handle:', this._handle);
+                Module.delete_timeline(this._handle);
+                this._handle = null;
+            } catch (error) {
+                console.warn('Error disposing timeline:', error);
+                this._handle = null; // Mark as disposed even if error
+            }
         }
     }
 }
@@ -196,9 +209,15 @@ class Clip {
     }
     
     dispose() {
-        if (this._handle) {
-            Module.delete_clip(this._handle);
-            this._handle = null;
+        if (this._handle && this._handle !== 0) {
+            try {
+                console.log('Disposing clip with handle:', this._handle);
+                Module.delete_clip(this._handle);
+                this._handle = null;
+            } catch (error) {
+                console.warn('Error disposing clip:', error);
+                this._handle = null; // Mark as disposed even if error
+            }
         }
     }
 }
@@ -294,9 +313,15 @@ class Track {
     }
     
     dispose() {
-        if (this._handle) {
-            Module.delete_track(this._handle);
-            this._handle = null;
+        if (this._handle && this._handle !== 0) {
+            try {
+                console.log('Disposing track with handle:', this._handle);
+                Module.delete_track(this._handle);
+                this._handle = null;
+            } catch (error) {
+                console.warn('Error disposing track:', error);
+                this._handle = null; // Mark as disposed even if error
+            }
         }
     }
 }
@@ -341,9 +366,15 @@ class ExternalReference {
     }
     
     dispose() {
-        if (this._handle) {
-            Module.delete_external_reference(this._handle);
-            this._handle = null;
+        if (this._handle && this._handle !== 0) {
+            try {
+                console.log('Disposing external reference with handle:', this._handle);
+                Module.delete_external_reference(this._handle);
+                this._handle = null;
+            } catch (error) {
+                console.warn('Error disposing external reference:', error);
+                this._handle = null; // Mark as disposed even if error
+            }
         }
     }
 }
@@ -402,9 +433,15 @@ class Stack {
     }
     
     dispose() {
-        if (this._handle) {
-            Module.delete_stack(this._handle);
-            this._handle = null;
+        if (this._handle && this._handle !== 0) {
+            try {
+                console.log('Disposing stack with handle:', this._handle);
+                Module.delete_stack(this._handle);
+                this._handle = null;
+            } catch (error) {
+                console.warn('Error disposing stack:', error);
+                this._handle = null; // Mark as disposed even if error
+            }
         }
     }
 }

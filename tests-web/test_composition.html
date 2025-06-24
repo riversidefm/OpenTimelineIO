@@ -35,7 +35,7 @@
                 window.Module = Module;
                 
                 const wrapperScript = document.createElement('script');
-                wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js';
+                wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js?v=' + Date.now();
                 document.head.appendChild(wrapperScript);
                 await new Promise(resolve => wrapperScript.onload = resolve);
                 

@@ -273,6 +273,8 @@ export NPM_TOKEN=your_github_token
 npm publish
 ```
 
+That's it! These commands are all you need for the complete TypeScript bindings workflow.
+
 ## Contributing
 
 When adding new bindings:
