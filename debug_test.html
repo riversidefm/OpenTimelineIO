@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug WASM Modules</title>
+</head>
+<body>
+    <h1>Debug WASM Modules</h1>
+    <div id="output"></div>
+    
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        async function testModules() {
+            try {
+                log('Starting debug test...');
+                
+                // Load OpenTime module
+                log('Loading OpenTime script...');
+                const script1 = document.createElement('script');
+                script1.src = 'build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                document.head.appendChild(script1);
+                
+                script1.onload = async () => {
+                    log('OpenTime script loaded, initializing module...');
+                    
+                    try {
+                        const OpenTimeModuleInstance = await window.OpenTimeModule();
+                        log('OpenTime module initialized successfully!');
+                        
+                        // Check what's available
+                        log('Available in OpenTimeModule:');
+                        for (let key in OpenTimeModuleInstance) {
+                            if (typeof OpenTimeModuleInstance[key] === 'function') {
+                                log('  Function: ' + key);
+                            } else if (typeof OpenTimeModuleInstance[key] === 'object') {
+                                log('  Class/Object: ' + key);
+                            } else {
+                                log('  Property: ' + key + ' = ' + OpenTimeModuleInstance[key]);
+                            }
+                        }
+                        
+                        // Test creating a RationalTime
+                        if (OpenTimeModuleInstance.RationalTime) {
+                            log('Testing RationalTime...');
+                            const time = new OpenTimeModuleInstance.RationalTime(10, 24);
+                            log('Created RationalTime(10, 24)');
+                            log('  value(): ' + time.value());
+                            log('  rate(): ' + time.rate());
+                            
+                            if (time.to_seconds) {
+                                log('  to_seconds(): ' + time.to_seconds());
+                            } else {
+                                log('  to_seconds method not found!');
+                            }
+                        } else {
+                            log('RationalTime class not found!');
+                        }
+                        
+                        // Test add function
+                        if (OpenTimeModuleInstance.add) {
+                            log('Testing add function...');
+                            const time1 = new OpenTimeModuleInstance.RationalTime(10, 24);
+                            const time2 = new OpenTimeModuleInstance.RationalTime(5, 24);
+                            const sum = OpenTimeModuleInstance.add(time1, time2);
+                            log('add(10/24, 5/24) = ' + sum.value() + '/' + sum.rate());
+                        } else {
+                            log('add function not found!');
+                        }
+                        
+                    } catch (error) {
+                        log('Error initializing OpenTime module: ' + error.message);
+                    }
+                };
+                
+                script1.onerror = () => {
+                    log('Error loading OpenTime script!');
+                };
+                
+            } catch (error) {
+                log('Error in testModules: ' + error.message);
+            }
+        }
+        
+        // Start test when page loads
+        document.addEventListener('DOMContentLoaded', testModules);
+    </script>
+</body>
+</html> 
