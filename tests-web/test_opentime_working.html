@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTime Bindings Test</title>
+</head>
+<body>
+    <h1>OpenTime Bindings Test</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        import OTIO from '../otio.js';
+
+        async function runTests() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Loading OpenTime bindings...</p>';
+
+            try {
+                // Wait for WASM to initialize
+                const Module = await OTIO();
+                
+                resultsDiv.innerHTML += '<h2>Basic Functions</h2>';
+                
+                if (typeof Module.get_version === 'function') {
+                    const version = Module.get_version();
+                    resultsDiv.innerHTML += '<p>✅ get_version(): ' + version + '</p>';
+                } else {
+                    resultsDiv.innerHTML += '<p>❌ get_version not found</p>';
+                }
+
+                if (typeof Module.test_connection === 'function') {
+                    Module.test_connection();
+                    resultsDiv.innerHTML += '<p>✅ test_connection() called successfully</p>';
+                } else {
+                    resultsDiv.innerHTML += '<p>❌ test_connection not found</p>';
+                }
+
+                resultsDiv.innerHTML += '<h2>RationalTime Tests</h2>';
+                
+                // Test RationalTime creation
+                const rt1 = new Module.RationalTime(100, 24);
+                resultsDiv.innerHTML += '<p>✅ Created RationalTime(100, 24)</p>';
+                resultsDiv.innerHTML += '<p>Value: ' + rt1.value() + ', Rate: ' + rt1.rate() + '</p>';
+                resultsDiv.innerHTML += '<p>Seconds: ' + rt1.to_seconds() + '</p>';
+                
+                const rt2 = new Module.RationalTime(50, 24);
+                resultsDiv.innerHTML += '<p>✅ Created RationalTime(50, 24)</p>';
+                
+                // Test arithmetic
+                const sum = Module.add(rt1, rt2);
+                resultsDiv.innerHTML += '<p>✅ Addition: ' + rt1.value() + ' + ' + rt2.value() + ' = ' + sum.value() + '</p>';
+                
+                const diff = Module.subtract(rt1, rt2);
+                resultsDiv.innerHTML += '<p>✅ Subtraction: ' + rt1.value() + ' - ' + rt2.value() + ' = ' + diff.value() + '</p>';
+
+                resultsDiv.innerHTML += '<h2>TimeRange Tests</h2>';
+                
+                // Test TimeRange
+                const range = new Module.TimeRange(rt1, rt2);
+                resultsDiv.innerHTML += '<p>✅ Created TimeRange</p>';
+                resultsDiv.innerHTML += '<p>Start: ' + range.start_time.value() + ', Duration: ' + range.duration.value() + '</p>';
+                resultsDiv.innerHTML += '<p>End (exclusive): ' + range.end_time_exclusive().value() + '</p>';
+                
+                // Test contains
+                const testTime = new Module.RationalTime(125, 24);
+                const contains = range.contains(testTime);
+                resultsDiv.innerHTML += '<p>Range contains ' + testTime.value() + ': ' + contains + '</p>';
+
+                resultsDiv.innerHTML += '<h2>TimeTransform Tests</h2>';
+                
+                // Test TimeTransform
+                const offset = new Module.RationalTime(10, 24);
+                const transform = new Module.TimeTransform(offset, 1.0, 24);
+                resultsDiv.innerHTML += '<p>✅ Created TimeTransform</p>';
+                
+                const transformed = transform.applied_to(rt1);
+                resultsDiv.innerHTML += '<p>Transform applied: ' + rt1.value() + ' -> ' + transformed.value() + '</p>';
+
+                resultsDiv.innerHTML += '<h2>All Tests Completed! ✅</h2>';
+
+            } catch (error) {
+                resultsDiv.innerHTML += '<p style="color: red;">❌ Error: ' + error.message + '</p>';
+                console.error('Test error:', error);
+            }
+        }
+
+        runTests();
+    </script>
+</body>
+</html> 
