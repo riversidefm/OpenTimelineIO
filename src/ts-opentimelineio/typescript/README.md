@@ -1,84 +1,160 @@
 # OpenTimelineIO TypeScript/JavaScript Bindings
 
-This package provides TypeScript/JavaScript bindings for [OpenTimelineIO](https://github.com/AcademySoftwareFoundation/OpenTimelineIO), compiled to WebAssembly using Emscripten.
+TypeScript/JavaScript bindings for [OpenTimelineIO](http://opentimelineio.io/) using WebAssembly (WASM).
 
 ## Installation
 
 ```bash
-npm install opentimelineio
+# From GitHub Packages
+npm install @riversidefm/opentimelineio
 ```
 
-## Usage
+## Quick Start
 
-### Basic Example
+### Node.js
 
-```typescript
-import { Timeline, Track, Clip, RationalTime, TimeRange } from 'opentimelineio';
+```javascript
+const initializeOTIO = require('@riversidefm/opentimelineio');
 
-// Create a timeline
-const timeline = new Timeline("My Timeline");
+async function example() {
+  // Initialize the modules
+  const { OpenTime, OTIO } = await initializeOTIO();
+  
+  // Create a timeline
+  const timeline = new OTIO.Timeline("My Project");
+  
+  // Create time values (24fps)
+  const startTime = new OpenTime.RationalTime(0, 24);
+  const duration = new OpenTime.RationalTime(120, 24); // 5 seconds
+  const range = new OpenTime.TimeRange(startTime, duration);
+  
+  // Create a clip
+  const clip = new OTIO.Clip("Shot_01");
+  clip.set_source_range(range);
+  
+  // Create media reference
+  const mediaRef = new OTIO.ExternalReference("file:///path/to/media.mov");
+  clip.set_media_reference(mediaRef);
+  
+  // Export to JSON
+  console.log(timeline.to_json_string());
+  
+  // Clean up (important for memory management)
+  mediaRef.dispose();
+  clip.dispose();
+  timeline.dispose();
+}
 
-// Create a track
-const track = new Track("V1");
-
-// Create a clip
-const clip = new Clip("My Clip");
-clip.set_source_range(new TimeRange(
-  RationalTime.from_seconds(0, 24),
-  RationalTime.from_seconds(5, 24)
-));
-
-// Add the clip to the track (you would need to implement the collection methods)
-// track.append(clip);
-
-// Add the track to the timeline
-// timeline.tracks().append(track);
-
-// Serialize to JSON
-console.log(timeline.to_json_string());
+example().catch(console.error);
 ```
 
-### Working with Time
+### Browser
 
-```typescript
-import { RationalTime, TimeRange } from 'opentimelineio';
-
-// Create time values
-const time1 = new RationalTime(24, 24); // 1 second at 24fps
-const time2 = RationalTime.from_seconds(2.5, 24); // 2.5 seconds at 24fps
-
-// Create a time range
-const range = new TimeRange(time1, time2);
-
-// Time arithmetic
-const sum = add(time1, time2);
-const scaled = multiply(time1, 2);
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="node_modules/@riversidefm/opentimelineio/dist/opentime.js"></script>
+    <script src="node_modules/@riversidefm/opentimelineio/dist/opentimelineio.js"></script>
+    <script src="node_modules/@riversidefm/opentimelineio/wrappers.js"></script>
+</head>
+<body>
+    <script>
+    async function example() {
+        // Initialize modules
+        const OpenTime = await window.OpenTimeModule();
+        const OTIO = await window.OpenTimelineIOModule();
+        window.Module = OTIO; // Required for wrapper classes
+        
+        // Create timeline
+        const timeline = new window.OTIO.Timeline("My Project");
+        
+        // Create clip with time range
+        const clip = new window.OTIO.Clip("Shot_01");
+        const range = new OpenTime.TimeRange(
+            new OpenTime.RationalTime(0, 24),
+            new OpenTime.RationalTime(120, 24)
+        );
+        clip.set_source_range(range);
+        
+        console.log("Timeline:", timeline.name());
+        console.log("JSON:", timeline.to_json_string());
+        
+        // Clean up
+        clip.dispose();
+        timeline.dispose();
+    }
+    
+    example().catch(console.error);
+    </script>
+</body>
+</html>
 ```
+
+## Architecture
+
+The bindings use a two-layer architecture:
+
+1. **WASM Layer**: Direct C++ bindings compiled to WebAssembly
+2. **Wrapper Layer**: JavaScript classes providing a clean object-oriented API
+
+This design works around OpenTimelineIO's reference counting system where core classes have protected destructors.
 
 ## API Reference
 
-The TypeScript bindings closely follow the C++ API. See the [OpenTimelineIO documentation](https://opentimelineio.readthedocs.io/) for detailed API documentation.
+### Core Classes
 
-### Key Classes
+- **Timeline**: Top-level container for tracks
+- **Track**: Container for clips (video/audio tracks)
+- **Clip**: References to media with timing information
+- **ExternalReference**: File-based media references
 
-- **Timeline**: The root object containing tracks
-- **Track**: Contains clips and other items
-- **Clip**: Represents a piece of media with timing
-- **RationalTime**: Represents time as a rational number
-- **TimeRange**: Represents a range of time
-- **MediaReference**: References to external media files
+### Time Classes (OpenTime module)
 
-## Building from Source
+- **RationalTime**: Precise time representation (value/rate)
+- **TimeRange**: Time range with start time and duration
+- **TimeTransform**: Time transformations (offset/scale)
 
-To build the TypeScript bindings from source:
+### Key Methods
 
-1. Install Emscripten SDK
-2. Configure the build with Emscripten:
-   ```bash
-   emcmake cmake -B build-wasm -S . -DOTIO_TYPESCRIPT_INSTALL=ON
-   cmake --build build-wasm
-   ```
+```javascript
+// Timeline
+const timeline = new OTIO.Timeline("name");
+timeline.name()                    // Get name
+timeline.set_name("new name")      // Set name
+timeline.duration()                // Get duration as RationalTime
+timeline.to_json_string()          // Export to JSON
+timeline.dispose()                 // Clean up memory
 
-## License
+// Time operations
+const time = new OpenTime.RationalTime(24, 24); // 1 second at 24fps
+time.value()                       // Get frame value
+time.rate()                        // Get frame rate
+time.to_seconds()                  // Convert to seconds
 
-OpenTimelineIO is licensed under the Apache 2.0 license. See [LICENSE](https://github.com/AcademySoftwareFoundation/OpenTimelineIO/blob/main/LICENSE) for details. 
+// Time arithmetic
+const sum = OpenTime.add(time1, time2);
+const diff = OpenTime.subtract(time1, time2);
+```
+
+## Memory Management
+
+⚠️ **Important**: Always call `dispose()` on objects when done to prevent memory leaks:
+
+```javascript
+const timeline = new OTIO.Timeline("test");
+// ... use timeline ...
+timeline.dispose(); // Required!
+```
+
+## TypeScript Support
+
+Full TypeScript definitions are included:
+
+```typescript
+import { Timeline, RationalTime, TimeRange } from '@riversidefm/opentimelineio';
+
+// Types are automatically available
+const timeline: Timeline = new OTIO.Timeline("typed");
+const time: RationalTime = new OpenTime.RationalTime(24, 24);
+```

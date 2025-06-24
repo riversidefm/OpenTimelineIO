@@ -1,38 +1,42 @@
 {
-  "name": "opentimelineio",
-  "version": "0.18.0",
-  "description": "OpenTimelineIO TypeScript/JavaScript bindings",
-  "main": "opentimelineio.js",
+  "name": "@riversidefm/opentimelineio",
+  "version": "1.0.0",
+  "description": "OpenTimelineIO TypeScript/JavaScript bindings with WASM",
+  "main": "index.js",
   "types": "index.d.ts",
   "files": [
-    "opentimelineio.js",
-    "opentimelineio.wasm",
+    "index.js",
     "index.d.ts",
+    "wrappers.js",
+    "dist/",
     "README.md"
   ],
   "scripts": {
+    "build": "node scripts/copy-build-files.js",
+    "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AcademySoftwareFoundation/OpenTimelineIO.git"
+    "url": "https://github.com/riversidefm/OpenTimelineIO.git"
   },
   "keywords": [
+    "opentimelineio",
+    "otio",
     "timeline",
-    "editorial",
-    "vfx",
-    "animation",
     "video",
     "audio",
-    "post-production",
+    "editing",
     "wasm",
     "typescript"
   ],
-  "author": "Contributors to the OpenTimelineIO project",
-  "license": "Apache-2.0",
+  "author": "Contributors to the OpenTimelineIO project / Riverside",
   "homepage": "https://opentimelineio.readthedocs.io/",
   "dependencies": {},
   "devDependencies": {
     "typescript": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
   }
 } 

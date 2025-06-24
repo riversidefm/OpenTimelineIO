@@ -408,6 +408,102 @@ EMSCRIPTEN_BINDINGS(otio_core) {
             }
         });
     
+    // Composition functions (Timeline and Track inherit from Composition)
+    
+    // Timeline tracks access
+    function("timeline_tracks", 
+        +[](size_t ptr) -> size_t { 
+            if (ptr == 0) return 0;
+            Timeline* obj = reinterpret_cast<Timeline*>(ptr);
+            Stack* tracks = obj ? obj->tracks() : nullptr;
+            return reinterpret_cast<size_t>(tracks);
+        });
+    
+    // Stack/Composition children operations
+    function("composition_children_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Composition* obj = reinterpret_cast<Composition*>(ptr);
+            return obj ? static_cast<int>(obj->children().size()) : 0; 
+        });
+    function("composition_child_at_index", 
+        +[](size_t ptr, int index) -> size_t { 
+            if (ptr == 0) return 0;
+            Composition* obj = reinterpret_cast<Composition*>(ptr);
+            if (!obj) return 0;
+            const auto& children = obj->children();
+            if (index < 0 || index >= static_cast<int>(children.size())) return 0;
+            // Access the retainer and get the raw pointer using .value
+            const auto& retainer = children[index];
+            Composable* child = retainer.value;
+            return reinterpret_cast<size_t>(child);
+        });
+    function("composition_append_child", 
+        +[](size_t ptr, size_t childPtr) -> bool { 
+            if (ptr == 0 || childPtr == 0) return false;
+            Composition* obj = reinterpret_cast<Composition*>(ptr);
+            Composable* child = reinterpret_cast<Composable*>(childPtr);
+            return obj ? obj->append_child(child) : false; 
+        });
+    function("composition_insert_child", 
+        +[](size_t ptr, int index, size_t childPtr) -> bool { 
+            if (ptr == 0 || childPtr == 0) return false;
+            Composition* obj = reinterpret_cast<Composition*>(ptr);
+            Composable* child = reinterpret_cast<Composable*>(childPtr);
+            return obj ? obj->insert_child(index, child) : false; 
+        });
+    function("composition_remove_child", 
+        +[](size_t ptr, int index) -> bool { 
+            if (ptr == 0) return false;
+            Composition* obj = reinterpret_cast<Composition*>(ptr);
+            return obj ? obj->remove_child(index) : false; 
+        });
+    function("composition_index_of_child", 
+        +[](size_t ptr, size_t childPtr) -> int { 
+            if (ptr == 0 || childPtr == 0) return -1;
+            Composition* obj = reinterpret_cast<Composition*>(ptr);
+            Composable* child = reinterpret_cast<Composable*>(childPtr);
+            return obj ? obj->index_of_child(child) : -1; 
+        });
+    
+    // Stack utility functions (same as composition but for clarity)
+    function("stack_name", 
+        +[](size_t ptr) -> std::string { 
+            if (ptr == 0) return "";
+            Stack* obj = reinterpret_cast<Stack*>(ptr);
+            return obj ? obj->name() : ""; 
+        });
+    function("stack_set_name", 
+        +[](size_t ptr, const std::string& name) { 
+            if (ptr == 0) return;
+            Stack* obj = reinterpret_cast<Stack*>(ptr);
+            if (obj) obj->set_name(name); 
+        });
+    function("stack_to_json_string", 
+        +[](size_t ptr) -> std::string { 
+            if (ptr == 0) return "null";
+            Stack* obj = reinterpret_cast<Stack*>(ptr);
+            if (!obj) return "null";
+            
+            try {
+                // Create a temporary retainer to ensure proper reference counting during serialization
+                SerializableObject::Retainer<Stack> temp_retainer(obj);
+                std::string result = obj->to_json_string();
+                temp_retainer.take_value(); // Release without decrementing (since we don't own it)
+                return result;
+            } catch (...) {
+                return "null";
+            }
+        });
+    
+    // Helper function to determine object type for wrapper creation
+    function("get_object_schema_name", 
+        +[](size_t ptr) -> std::string { 
+            if (ptr == 0) return "";
+            SerializableObject* obj = reinterpret_cast<SerializableObject*>(ptr);
+            return obj ? obj->schema_name() : ""; 
+        });
+    
     // Test functions
     function("get_version", &get_version);
     function("test_connection", &test_connection);

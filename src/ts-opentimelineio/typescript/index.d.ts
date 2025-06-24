@@ -154,6 +154,23 @@ declare module 'opentimelineio' {
   export function external_reference_set_target_url(handle: Handle, url: string): void;
   export function external_reference_is_missing_reference(handle: Handle): boolean;
   export function external_reference_to_json_string(handle: Handle): string;
+
+  // Composition utility functions (internal)
+  export function timeline_tracks(handle: Handle): Handle;
+  export function composition_children_count(handle: Handle): number;
+  export function composition_child_at_index(handle: Handle, index: number): Handle;
+  export function composition_append_child(handle: Handle, childHandle: Handle): boolean;
+  export function composition_insert_child(handle: Handle, index: number, childHandle: Handle): boolean;
+  export function composition_remove_child(handle: Handle, index: number): boolean;
+  export function composition_index_of_child(handle: Handle, childHandle: Handle): number;
+
+  // Stack utility functions (internal)
+  export function stack_name(handle: Handle): string;
+  export function stack_set_name(handle: Handle, name: string): void;
+  export function stack_to_json_string(handle: Handle): string;
+
+  // Helper functions (internal)
+  export function get_object_schema_name(handle: Handle): string;
   
   // Public object-oriented wrapper class declarations
   export class Timeline {
@@ -164,6 +181,15 @@ declare module 'opentimelineio' {
     schema_name(): string;
     schema_version(): number;
     duration(): OTIORationalTime;
+    
+    // Timeline composition operations
+    tracks(): Stack | null;
+    add_track(track: Track): boolean;
+    insert_track(index: number, track: Track): boolean;
+    remove_track(index: number): boolean;
+    get_track(index: number): Track | null;
+    track_count(): number;
+    
     dispose(): void;
   }
   
@@ -191,6 +217,22 @@ declare module 'opentimelineio' {
     enabled(): boolean;
     set_enabled(enabled: boolean): void;
     to_json_string(): string;
+    
+    // Track composition operations
+    readonly length: number;
+    child_at(index: number): Clip | null;
+    append(item: Clip): boolean;
+    insert(index: number, item: Clip): boolean;
+    remove(index: number): boolean;
+    index_of(item: Clip): number;
+    
+    // Convenience methods for clips
+    add_clip(clip: Clip): boolean;
+    insert_clip(index: number, clip: Clip): boolean;
+    remove_clip(index: number): boolean;
+    get_clip(index: number): Clip | null;
+    clip_count(): number;
+    
     dispose(): void;
   }
   
@@ -207,6 +249,18 @@ declare module 'opentimelineio' {
   
   export class Stack {
     constructor(name?: string);
+    name(): string;
+    set_name(name: string): void;
+    to_json_string(): string;
+    
+    // Stack composition operations
+    readonly length: number;
+    child_at(index: number): Track | null;
+    append(item: Track): boolean;
+    insert(index: number, item: Track): boolean;
+    remove(index: number): boolean;
+    index_of(item: Track): number;
+    
     dispose(): void;
   }
   

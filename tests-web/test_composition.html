@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenTimelineIO Composition Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 10px 0; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>OpenTimelineIO Composition Test</h1>
+    <div id="results">Loading...</div>
+
+    <script>
+        async function testComposition() {
+            const results = document.getElementById('results');
+            let output = '';
+            
+            try {
+                // Load modules
+                const openTimeScript = document.createElement('script');
+                openTimeScript.src = '../build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                document.head.appendChild(openTimeScript);
+                await new Promise(resolve => openTimeScript.onload = resolve);
+                const OpenTimeModule = await window.OpenTimeModule();
+                
+                const otioScript = document.createElement('script');
+                otioScript.src = '../build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                document.head.appendChild(otioScript);
+                await new Promise(resolve => otioScript.onload = resolve);
+                const Module = await window.OpenTimelineIOModule();
+                window.Module = Module;
+                
+                const wrapperScript = document.createElement('script');
+                wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js';
+                document.head.appendChild(wrapperScript);
+                await new Promise(resolve => wrapperScript.onload = resolve);
+                
+                output += '<h3>Testing Timeline Composition:</h3><pre>';
+                
+                // Test 1: Create timeline and add tracks
+                output += '1. Creating timeline and adding tracks:\n';
+                const timeline = new window.OTIO.Timeline("My Movie");
+                output += `   Created timeline: "${timeline.name()}"\n`;
+                
+                // Check initial track count
+                output += `   Initial track count: ${timeline.track_count()}\n`;
+                
+                // Create video track
+                const videoTrack = new window.OTIO.Track("V1", "Video");
+                output += `   Created video track: "${videoTrack.name()}" (${videoTrack.kind()})\n`;
+                
+                // Create audio track
+                const audioTrack = new window.OTIO.Track("A1", "Audio");
+                output += `   Created audio track: "${audioTrack.name()}" (${audioTrack.kind()})\n`;
+                
+                // Add tracks to timeline
+                const addVideoResult = timeline.add_track(videoTrack);
+                output += `   Added video track: ${addVideoResult}\n`;
+                
+                const addAudioResult = timeline.add_track(audioTrack);
+                output += `   Added audio track: ${addAudioResult}\n`;
+                
+                output += `   Track count after adding: ${timeline.track_count()}\n\n`;
+                
+                // Test 2: Add clips to tracks
+                output += '2. Adding clips to video track:\n';
+                
+                // Create clips with time ranges
+                const clip1 = new window.OTIO.Clip("Shot_01");
+                const clip1Range = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(0, 24),
+                    new OpenTimeModule.RationalTime(120, 24) // 5 seconds at 24fps
+                );
+                clip1.set_source_range(clip1Range);
+                output += `   Created clip: "${clip1.name()}"\n`;
+                
+                const clip2 = new window.OTIO.Clip("Shot_02");
+                const clip2Range = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(0, 24),
+                    new OpenTimeModule.RationalTime(96, 24) // 4 seconds at 24fps
+                );
+                clip2.set_source_range(clip2Range);
+                output += `   Created clip: "${clip2.name()}"\n`;
+                
+                // Add clips to video track
+                output += `   Video track clip count before: ${videoTrack.clip_count()}\n`;
+                
+                const addClip1Result = videoTrack.add_clip(clip1);
+                output += `   Added clip1 to video track: ${addClip1Result}\n`;
+                
+                const addClip2Result = videoTrack.add_clip(clip2);
+                output += `   Added clip2 to video track: ${addClip2Result}\n`;
+                
+                output += `   Video track clip count after: ${videoTrack.clip_count()}\n\n`;
+                
+                // Test 3: Insert clip in the middle
+                output += '3. Inserting clip in the middle:\n';
+                const clip3 = new window.OTIO.Clip("Insert_Clip");
+                const clip3Range = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(0, 24),
+                    new OpenTimeModule.RationalTime(48, 24) // 2 seconds at 24fps
+                );
+                clip3.set_source_range(clip3Range);
+                
+                const insertResult = videoTrack.insert_clip(1, clip3);
+                output += `   Inserted "${clip3.name()}" at index 1: ${insertResult}\n`;
+                output += `   Video track clip count: ${videoTrack.clip_count()}\n`;
+                
+                // List all clips in order
+                output += '   Clips in video track:\n';
+                for (let i = 0; i < videoTrack.clip_count(); i++) {
+                    const clip = videoTrack.get_clip(i);
+                    if (clip) {
+                        output += `     ${i}: "${clip.name()}"\n`;
+                    }
+                }
+                output += '\n';
+                
+                // Test 4: Timeline structure inspection
+                output += '4. Timeline structure inspection:\n';
+                const tracks = timeline.tracks();
+                output += `   Timeline tracks object: ${tracks ? 'exists' : 'null'}\n`;
+                
+                if (tracks) {
+                    output += `   Tracks stack length: ${tracks.length}\n`;
+                    for (let i = 0; i < tracks.length; i++) {
+                        const track = tracks.child_at(i);
+                        if (track) {
+                            output += `     Track ${i}: "${track.name()}" (${track.kind()}) - ${track.clip_count()} clips\n`;
+                        }
+                    }
+                }
+                output += '\n';
+                
+                // Test 5: JSON serialization
+                output += '5. JSON serialization:\n';
+                const timelineJson = timeline.to_json_string();
+                output += `   Timeline JSON length: ${timelineJson.length} characters\n`;
+                
+                // Parse and show structure
+                try {
+                    const parsed = JSON.parse(timelineJson);
+                    output += `   Timeline schema: ${parsed.OTIO_SCHEMA}\n`;
+                    output += `   Timeline name: "${parsed.name}"\n`;
+                    if (parsed.tracks && parsed.tracks.children) {
+                        output += `   JSON tracks count: ${parsed.tracks.children.length}\n`;
+                        parsed.tracks.children.forEach((track, i) => {
+                            const childCount = track.children ? track.children.length : 0;
+                            output += `     JSON Track ${i}: "${track.name}" (${track.kind}) - ${childCount} items\n`;
+                        });
+                    }
+                } catch (e) {
+                    output += `   JSON parse error: ${e.message}\n`;
+                }
+                output += '\n';
+                
+                // Test 6: Cleanup test
+                output += '6. Cleanup test:\n';
+                
+                // Remove a clip
+                const removeResult = videoTrack.remove_clip(1);
+                output += `   Removed clip at index 1: ${removeResult}\n`;
+                output += `   Video track clip count after removal: ${videoTrack.clip_count()}\n`;
+                
+                // Dispose all objects
+                output += '   Disposing objects...\n';
+                clip1.dispose();
+                clip2.dispose();
+                clip3.dispose();
+                videoTrack.dispose();
+                audioTrack.dispose();
+                timeline.dispose();
+                output += '   All objects disposed successfully\n';
+                
+                output += '</pre>';
+                
+                results.innerHTML = `<div class="success">🎉 All composition tests passed!</div>${output}`;
+                
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Composition test failed: ${error.message}</div><pre>${error.stack}</pre>`;
+                console.error('Composition test error:', error);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', testComposition);
+    </script>
+</body>
+</html> 

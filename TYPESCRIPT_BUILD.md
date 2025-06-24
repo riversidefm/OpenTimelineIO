@@ -18,7 +18,15 @@ This guide explains how to build the TypeScript/JavaScript bindings for OpenTime
    emcc --version
    ```
 
+3. **Install Node.js** (for NPM package commands)
+   ```bash
+   node --version
+   npm --version
+   ```
+
 ## Building the TypeScript Bindings
+
+### Step 1: Build WASM Modules
 
 1. **Configure the build with Emscripten**
    ```bash
@@ -35,47 +43,61 @@ This guide explains how to build the TypeScript/JavaScript bindings for OpenTime
    cmake --build build-wasm
    ```
 
-3. **Install (optional)**
+### Step 2: Prepare NPM Package
+
+3. **Copy WASM files to package directory**
    ```bash
-   cmake --install build-wasm
+   cd src/ts-opentimelineio/typescript
+   npm run build
+   ```
+
+4. **(Optional) Test the package**
+   ```bash
+   npm pack --dry-run
+   ```
+
+5. **(Optional) Install locally for testing**
+   ```bash
+   npm pack
+   npm install -g ./riversidefm-opentimelineio-1.0.0.tgz
    ```
 
 ## Output Files
 
-The build will generate several files in the build directory:
+The build process generates files in two locations:
 
+### WASM Build Output
 - `build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js` / `opentime.wasm` - OpenTime bindings
 - `build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js` / `opentimelineio.wasm` - Main OpenTimelineIO bindings
+
+### NPM Package Files
+- `src/ts-opentimelineio/typescript/dist/` - Generated WASM files (copied from build)
+- `src/ts-opentimelineio/typescript/index.js` - Main entry point
 - `src/ts-opentimelineio/typescript/index.d.ts` - TypeScript definitions
+- `src/ts-opentimelineio/typescript/wrappers.js` - JavaScript wrapper classes
 - `src/ts-opentimelineio/typescript/package.json` - NPM package configuration
-- `src/ts-opentimelineio/typescript/wrappers.js` - JavaScript wrapper classes (required for object-oriented API)
 
 ## Using the Built Bindings
 
-### In Node.js
+### Via NPM Package (Recommended)
 
+```bash
+npm install @riversidefm/opentimelineio
+```
+
+#### Node.js Usage
 ```javascript
-// Load both WASM modules
-const OpenTimeModule = require('./build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js');
-const OpenTimelineIOModule = require('./build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js');
-
-// Load wrapper classes
-require('./src/ts-opentimelineio/typescript/wrappers.js');
+const initializeOTIO = require('@riversidefm/opentimelineio');
 
 async function main() {
-  // Initialize both modules
-  const openTimeInstance = await OpenTimeModule();
-  const otioInstance = await OpenTimelineIOModule();
+  // Initialize the modules
+  const { OpenTime, OTIO } = await initializeOTIO();
   
-  // Set global Module for wrapper classes
-  global.Module = otioInstance;
+  // Create a timeline
+  const timeline = new OTIO.Timeline("My Project");
   
-  // Use the object-oriented API
-  const timeline = new global.OTIO.Timeline("My Timeline");
-  console.log(timeline.name()); // "My Timeline"
-  
-  // Create time objects
-  const time = new openTimeInstance.RationalTime(24, 24);
+  // Create time values
+  const time = new OpenTime.RationalTime(24, 24);
   console.log(`Time: ${time.value()}/${time.rate()}`);
   
   // Clean up
@@ -85,65 +107,67 @@ async function main() {
 main().catch(console.error);
 ```
 
-### In a Web Browser
-
+#### Browser Usage
 ```html
-<!-- Load the WASM modules -->
-<script src="build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js"></script>
-<script src="build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js"></script>
-<!-- Load the wrapper classes -->
-<script src="src/ts-opentimelineio/typescript/wrappers.js"></script>
+<script src="node_modules/@riversidefm/opentimelineio/dist/opentime.js"></script>
+<script src="node_modules/@riversidefm/opentimelineio/dist/opentimelineio.js"></script>
+<script src="node_modules/@riversidefm/opentimelineio/wrappers.js"></script>
 
 <script>
-  async function initializeOTIO() {
-    // Initialize both modules
-    const OpenTimeModule = await window.OpenTimeModule();
-    const OTIOModule = await window.OpenTimelineIOModule();
-    
-    // Set the global Module for wrapper classes
-    window.Module = OTIOModule;
-    
-    // Now you can use the object-oriented API
-    const timeline = new OTIO.Timeline("My Timeline");
-    console.log(timeline.name()); // "My Timeline"
-    
-    // Create time objects using OpenTime module
-    const time = new OpenTimeModule.RationalTime(24, 24);
-    console.log(`Time: ${time.value()}/${time.rate()}`);
-    
-    // Clean up when done
-    timeline.dispose();
-  }
+async function main() {
+  // Initialize modules
+  const OpenTime = await window.OpenTimeModule();
+  const OTIO = await window.OpenTimelineIOModule();
+  window.Module = OTIO;
   
-  initializeOTIO();
+  // Use the API
+  const timeline = new window.OTIO.Timeline("My Project");
+  console.log(timeline.name());
+  
+  timeline.dispose();
+}
+main();
 </script>
 ```
 
-### With TypeScript
+### Direct WASM Usage (Development)
 
-```typescript
-import { Timeline, RationalTime, TimeRange } from './src/ts-opentimelineio/typescript/index.d.ts';
+#### Node.js
+```javascript
+// Load both WASM modules directly from build
+const OpenTimeModule = require('./build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js');
+const OpenTimelineIOModule = require('./build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js');
 
-// Load both WASM modules
-const OpenTimeModule = await import('./build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js');
-const OpenTimelineIOModule = await import('./build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js');
+// Load wrapper classes
+require('./src/ts-opentimelineio/typescript/wrappers.js');
 
-// Initialize modules
-const openTimeInstance = await OpenTimeModule.default();
-const otioInstance = await OpenTimelineIOModule.default();
+async function main() {
+  const openTimeInstance = await OpenTimeModule();
+  const otioInstance = await OpenTimelineIOModule();
+  
+  global.Module = otioInstance;
+  
+  const timeline = new global.OTIO.Timeline("My Timeline");
+  timeline.dispose();
+}
+```
 
-// Load wrapper classes (ensure they're available)
-await import('./src/ts-opentimelineio/typescript/wrappers.js');
+#### Browser
+```html
+<script src="build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js"></script>
+<script src="build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js"></script>
+<script src="src/ts-opentimelineio/typescript/wrappers.js"></script>
 
-// Set global Module for wrapper classes
-(globalThis as any).Module = otioInstance;
-
-// Now you have type-safe access
-const timeline = new (globalThis as any).OTIO.Timeline("My Timeline");
-const time = new openTimeInstance.RationalTime(24, 24);
-
-// Remember to clean up
-timeline.dispose();
+<script>
+async function main() {
+  const OpenTimeModule = await window.OpenTimeModule();
+  const OTIOModule = await window.OpenTimelineIOModule();
+  window.Module = OTIOModule;
+  
+  const timeline = new OTIO.Timeline("My Timeline");
+  timeline.dispose();
+}
+</script>
 ```
 
 ## Architecture Overview
@@ -163,6 +187,26 @@ This design works around OpenTimelineIO's reference counting system where core c
 4. **Exception Handling**: Exception catching is enabled (`DISABLE_EXCEPTION_CATCHING=0`)
 5. **Memory Management**: Always call `dispose()` on wrapper objects when done to prevent memory leaks
 6. **Module Loading**: Load OpenTime module for time operations, OpenTimelineIO module for OTIO classes, and wrapper classes for the object-oriented API
+7. **Package Updates**: Run `npm run build` after changing WASM builds to update the package
+
+## NPM Package Commands
+
+```bash
+# Copy WASM files to package (run after cmake build)
+cd src/ts-opentimelineio/typescript
+npm run build
+
+# Check package contents
+npm pack --dry-run
+
+# Test package locally
+npm pack
+npm install -g ./riversidefm-opentimelineio-1.0.0.tgz
+
+# Publish to GitHub Packages (requires NPM_TOKEN)
+export NPM_TOKEN=your_github_personal_access_token
+npm publish
+```
 
 ## Troubleshooting
 
@@ -171,6 +215,7 @@ This design works around OpenTimelineIO's reference counting system where core c
 - **Emscripten not found**: Make sure you've sourced `emsdk_env.sh`
 - **Missing dependencies**: Ensure all submodules are updated: `git submodule update --init --recursive`
 - **CMake errors**: Try cleaning the build directory: `rm -rf build-wasm`
+- **NPM build fails**: Make sure WASM build completed successfully first
 
 ### Runtime Issues
 
@@ -180,6 +225,13 @@ This design works around OpenTimelineIO's reference counting system where core c
 - **"OTIO is not defined"**: Make sure you've loaded the wrapper classes (`wrappers.js`) after loading both WASM modules
 - **"Module is not defined"**: Ensure you've set `window.Module` (browser) or `global.Module` (Node.js) to the OpenTimelineIO module instance
 - **Disposal errors**: Always call `dispose()` on objects when done to avoid memory leaks and runtime errors
+- **Package not found**: Make sure you've run `npm run build` after building WASM modules
+
+### Package Issues
+
+- **Files missing from package**: Check `package.json` `files` array includes `dist/`
+- **Wrong file paths**: Ensure all imports use `./dist/` for WASM files
+- **Git conflicts**: The `dist/` folder is gitignored - only committed source files should be tracked
 
 ## Testing
 
@@ -202,11 +254,32 @@ See the following files for usage examples:
 - `tests-web/test_typescript_bindings.html` - Browser-based comprehensive test suite
 - `tests-web/test_timeline_operations.html` - Browser-based diagnostic test
 
+## Complete Build Workflow
+
+```bash
+# 1. Build WASM modules
+emcmake cmake -B build-wasm -S . -DOTIO_TYPESCRIPT_INSTALL=ON
+cmake --build build-wasm
+
+# 2. Prepare NPM package
+cd src/ts-opentimelineio/typescript
+npm run build
+
+# 3. Test package
+npm pack --dry-run
+
+# 4. (Optional) Publish
+export NPM_TOKEN=your_github_token
+npm publish
+```
+
 ## Contributing
 
 When adding new bindings:
 
 1. Add the C++ binding code in `src/ts-opentimelineio/`
 2. Update the TypeScript definitions in `src/ts-opentimelineio/typescript/index.d.ts`
-3. Test the bindings with both Node.js and browser environments
-4. Update this documentation as needed 
+3. Rebuild WASM: `cmake --build build-wasm`
+4. Update package: `cd src/ts-opentimelineio/typescript && npm run build`
+5. Test the bindings with both Node.js and browser environments
+6. Update this documentation as needed 
