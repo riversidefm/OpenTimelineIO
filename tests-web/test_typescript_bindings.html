@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTimelineIO TypeScript Bindings Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>OpenTimelineIO TypeScript/WASM Bindings Test</h1>
+    
+    <div id="loading">Loading WASM modules...</div>
+    
+    <div id="opentime-test" class="test-section" style="display: none;">
+        <h2>OpenTime Module Test</h2>
+        <div id="opentime-results"></div>
+    </div>
+    
+    <div id="opentimelineio-test" class="test-section" style="display: none;">
+        <h2>OpenTimelineIO Module Test</h2>
+        <div id="opentimelineio-results"></div>
+    </div>
+
+    <script>
+        let OpenTimeModuleInstance = null;
+        let OpenTimelineIOModuleInstance = null;
+        
+        // Load modules sequentially to avoid conflicts
+        async function loadModules() {
+            try {
+                console.log('Loading OpenTime module...');
+                await loadOpenTimeModule();
+                console.log('Loading OpenTimelineIO module...');
+                await loadOpenTimelineIOModule();
+                console.log('All modules loaded, running tests...');
+                runAllTests();
+            } catch (error) {
+                console.error('Error loading modules:', error);
+                document.getElementById('loading').innerHTML = `<div class="error">Error loading modules: ${error.message}</div>`;
+            }
+        }
+        
+        function loadOpenTimeModule() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = '../build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                script.onload = () => {
+                    console.log('OpenTime script loaded');
+                    window.OpenTimeModule().then(module => {
+                        OpenTimeModuleInstance = module;
+                        console.log('OpenTime module initialized');
+                        resolve();
+                    }).catch(reject);
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        function loadOpenTimelineIOModule() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = '../build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                script.onload = () => {
+                    console.log('OpenTimelineIO script loaded');
+                    window.OpenTimelineIOModule().then(module => {
+                        OpenTimelineIOModuleInstance = module;
+                        // Make Module globally available for wrapper classes
+                        window.Module = module;
+                        console.log('OpenTimelineIO module initialized');
+                        
+                        // Load wrapper classes
+                        const wrapperScript = document.createElement('script');
+                        wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js';
+                        wrapperScript.onload = () => {
+                            console.log('Wrapper classes loaded');
+                            resolve();
+                        };
+                        wrapperScript.onerror = reject;
+                        document.head.appendChild(wrapperScript);
+                    }).catch(reject);
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        function runOpenTimeTests() {
+            const results = document.getElementById('opentime-results');
+            let output = '';
+            
+            try {
+                // Test RationalTime creation
+                const time1 = new OpenTimeModuleInstance.RationalTime(10, 24);
+                const time2 = new OpenTimeModuleInstance.RationalTime(5, 24);
+                
+                output += `<h3>RationalTime Tests:</h3>`;
+                output += `<pre>`;
+                output += `time1 = RationalTime(10, 24)\n`;
+                output += `  value: ${time1.value()}\n`;
+                output += `  rate: ${time1.rate()}\n`;
+                output += `  to_seconds: ${time1.to_seconds()}\n\n`;
+                
+                output += `time2 = RationalTime(5, 24)\n`;
+                output += `  value: ${time2.value()}\n`;
+                output += `  rate: ${time2.rate()}\n`;
+                output += `  to_seconds: ${time2.to_seconds()}\n\n`;
+                
+                // Test arithmetic
+                const sum = OpenTimeModuleInstance.add(time1, time2);
+                const diff = OpenTimeModuleInstance.subtract(time1, time2);
+                
+                output += `Arithmetic:\n`;
+                output += `  add(time1, time2): ${sum.value()}/${sum.rate()}\n`;
+                output += `  subtract(time1, time2): ${diff.value()}/${diff.rate()}\n\n`;
+                
+                // Test TimeRange
+                const range = new OpenTimeModuleInstance.TimeRange(time1, time2);
+                output += `TimeRange(time1, time2):\n`;
+                output += `  start_time: ${range.start_time.value()}/${range.start_time.rate()}\n`;
+                output += `  duration: ${range.duration.value()}/${range.duration.rate()}\n`;
+                output += `  end_time_exclusive: ${range.end_time_exclusive().value()}/${range.end_time_exclusive().rate()}\n`;
+                output += `</pre>`;
+                
+                results.innerHTML = `<div class="success">${output}</div>`;
+            } catch (error) {
+                results.innerHTML = `<div class="error">OpenTime test failed: ${error.message}</div>`;
+                console.error('OpenTime test error:', error);
+            }
+            
+            document.getElementById('opentime-test').style.display = 'block';
+        }
+        
+        function runAllTests() {
+            runOpenTimeTests();
+            runOpenTimelineIOTests();
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function runOpenTimelineIOTests() {
+            const results = document.getElementById('opentimelineio-results');
+            let output = '';
+            
+            try {
+                // Test basic functions
+                const version = OpenTimelineIOModuleInstance.get_version();
+                const connected = OpenTimelineIOModuleInstance.test_connection();
+                
+                output += `<h3>Basic Tests:</h3>`;
+                output += `<pre>`;
+                output += `Version: ${version}\n`;
+                output += `Connection test: ${connected}\n`;
+                output += `</pre>`;
+                
+                // Test core OTIO object creation
+                output += `<h3>Core OTIO Objects:</h3>`;
+                output += `<pre>`;
+                
+                // Test Timeline creation multiple times to see if it's a creation issue
+                output += `Testing Timeline creation...\n`;
+                let timeline = null;
+                let hasDisposalError = false;
+                try {
+                    timeline = new window.OTIO.Timeline("My Timeline");
+                    output += `Created Timeline: "${timeline.name()}"\n`;
+                    output += `  Schema: ${timeline.schema_name()}\n`;
+                    output += `  Version: ${timeline.schema_version()}\n`;
+                    
+                    // Try creating a second timeline
+                    const timeline2 = new window.OTIO.Timeline("Second Timeline");
+                    output += `Created second Timeline: "${timeline2.name()}"\n`;
+                    
+                    // Dispose the second timeline first (test disposal on a fresh object)
+                    output += `Attempting to dispose second timeline...\n`;
+                    timeline2.dispose();
+                    output += `Second timeline disposed successfully\n`;
+                    
+                } catch (createError) {
+                    output += `Timeline creation/disposal error: ${createError.message}\n`;
+                    console.error('Timeline creation/disposal error:', createError);
+                    hasDisposalError = true;
+                }
+                output += `\n`;
+                
+                // Create a track
+                const track = new window.OTIO.Track("V1", "Video");
+                output += `Created Track: "${track.name()}"\n`;
+                output += `  Kind: ${track.kind()}\n`;
+                output += `  Enabled: ${track.enabled()}\n\n`;
+                
+                // Create a clip
+                const clip = new window.OTIO.Clip("My Clip");
+                output += `Created Clip: "${clip.name()}"\n`;
+                output += `  Enabled: ${clip.enabled()}\n\n`;
+                
+                // Create an external reference
+                const mediaRef = new window.OTIO.ExternalReference("file:///path/to/media.mov");
+                output += `Created ExternalReference: "${mediaRef.target_url()}"\n`;
+                output += `  Is missing: ${mediaRef.is_missing_reference()}\n\n`;
+                
+                // Set the media reference on the clip
+                clip.set_media_reference(mediaRef);
+                const retrievedRef = clip.media_reference();
+                if (retrievedRef) {
+                    output += `Clip media reference: "${retrievedRef.target_url()}"\n\n`;
+                }
+                
+                // Test JSON serialization
+                output += `JSON Serialization:\n`;
+                const timelineJson = timeline.to_json_string();
+                output += `Timeline JSON (truncated): ${timelineJson.substring(0, 100)}...\n`;
+                
+                // Clean up objects in reverse creation order
+                output += `\nTesting disposal:\n`;
+                try {
+                    output += `Disposing media reference...\n`;
+                    mediaRef.dispose();
+                    output += `Media reference disposed successfully\n`;
+                    
+                    output += `Disposing clip...\n`;
+                    clip.dispose();
+                    output += `Clip disposed successfully\n`;
+                    
+                    output += `Disposing track...\n`;
+                    track.dispose();
+                    output += `Track disposed successfully\n`;
+                    
+                    if (timeline && !hasDisposalError) {
+                        output += `Disposing main timeline...\n`;
+                        timeline.dispose();
+                        output += `Main timeline disposed successfully\n`;
+                    } else if (hasDisposalError) {
+                        output += `Skipping main timeline disposal due to previous error\n`;
+                    } else {
+                        output += `Timeline was null, skipping disposal\n`;
+                    }
+                    
+                    output += `All objects properly disposed.\n`;
+                } catch (disposeError) {
+                    output += `Disposal error: ${disposeError.message}\n`;
+                    console.error('Disposal error:', disposeError);
+                }
+                
+                output += `</pre>`;
+                
+                results.innerHTML = `<div class="success">${output}</div>`;
+            } catch (error) {
+                results.innerHTML = `<div class="error">OpenTimelineIO test failed: ${error.message}</div>`;
+                console.error('OpenTimelineIO test error:', error);
+            }
+            
+            document.getElementById('opentimelineio-test').style.display = 'block';
+        }
+        
+        // Start tests
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Starting WASM tests...');
+            document.getElementById('loading').textContent = 'Loading modules...';
+            loadModules();
+        });
+    </script>
+</body>
+</html> 

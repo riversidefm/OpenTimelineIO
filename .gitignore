@@ -11,6 +11,7 @@ htmlcov
 xcuserdata/
 .venv/
 .cache
+cmake-build-debug/
 
 # Pycharm metadata
 .idea/

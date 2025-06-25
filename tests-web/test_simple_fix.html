@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple OTIO Test</title>
+</head>
+<body>
+    <h1>Simple OTIO Function Test</h1>
+    <div id="results"></div>
+
+    <script>
+        async function testSimpleFunctions() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                resultsDiv.innerHTML += '<p>Loading OpenTimelineIO module...</p>';
+                
+                // Load the module
+                const Module = await import('../otio.js');
+                const OTIO = await Module.default();
+                
+                resultsDiv.innerHTML += '<p>Module loaded successfully!</p>';
+                resultsDiv.innerHTML += '<p>Available functions: ' + Object.keys(OTIO).filter(k => typeof OTIO[k] === 'function').join(', ') + '</p>';
+                
+                // Test basic functions
+                if (typeof OTIO.get_version === 'function') {
+                    const version = OTIO.get_version();
+                    resultsDiv.innerHTML += '<p>✅ get_version(): ' + version + '</p>';
+                } else {
+                    resultsDiv.innerHTML += '<p>❌ get_version not found</p>';
+                }
+                
+                if (typeof OTIO.test_connection === 'function') {
+                    OTIO.test_connection();
+                    resultsDiv.innerHTML += '<p>✅ test_connection() called successfully</p>';
+                } else {
+                    resultsDiv.innerHTML += '<p>❌ test_connection not found</p>';
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML += '<p>❌ Error: ' + error.message + '</p>';
+                console.error(error);
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testSimpleFunctions);
+    </script>
+</body>
+</html> 

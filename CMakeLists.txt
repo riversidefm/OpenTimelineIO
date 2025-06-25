@@ -28,13 +28,16 @@ project(OpenTimelineIO VERSION ${OTIO_VERSION} LANGUAGES C CXX)
 # Installation options
 option(OTIO_CXX_INSTALL               "Install the C++ bindings" ON)
 option(OTIO_PYTHON_INSTALL            "Install the Python bindings" OFF)
+option(OTIO_TYPESCRIPT_INSTALL        "Install the TypeScript/WASM bindings" OFF)
 option(OTIO_DEPENDENCIES_INSTALL      "Install OTIO's C++ header dependencies (Imath)" ON)
 option(OTIO_INSTALL_PYTHON_MODULES    "Install OTIO pure Python modules/files" ON)
+option(OTIO_INSTALL_TYPESCRIPT_MODULES "Install OTIO TypeScript modules/files" ON)
 option(OTIO_INSTALL_COMMANDLINE_TOOLS "Install the OTIO command line tools" ON)
 option(OTIO_INSTALL_CONTRIB           "Install the opentimelineio_contrib Python package" ON)
 option(OTIO_FIND_IMATH                "Find Imath using find_package" OFF)
 option(OTIO_FIND_RAPIDJSON            "Find RapidJSON using find_package" OFF)
 set(OTIO_PYTHON_INSTALL_DIR "" CACHE STRING "Python installation dir (such as the site-packages dir)")
+set(OTIO_TYPESCRIPT_INSTALL_DIR "" CACHE STRING "TypeScript installation dir")
 
 # Build options
 option(OTIO_SHARED_LIBS          "Build shared if ON, static if OFF" ON)
@@ -275,6 +278,20 @@ endif()
 
 if(OTIO_PYTHON_INSTALL)
     add_subdirectory(src/py-opentimelineio)
+endif()
+
+if(OTIO_TYPESCRIPT_INSTALL AND EMSCRIPTEN)
+    # Set up TypeScript install directory
+    if(OTIO_TYPESCRIPT_INSTALL_DIR STREQUAL "")
+        set(OTIO_RESOLVED_TYPESCRIPT_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/typescript")
+    else()
+        set(OTIO_RESOLVED_TYPESCRIPT_INSTALL_DIR "${OTIO_TYPESCRIPT_INSTALL_DIR}")
+    endif()
+    
+    message(STATUS "Installing TypeScript bindings to: ${OTIO_RESOLVED_TYPESCRIPT_INSTALL_DIR}")
+    add_subdirectory(src/ts-opentimelineio)
+elseif(OTIO_TYPESCRIPT_INSTALL AND NOT EMSCRIPTEN)
+    message(WARNING "TypeScript bindings require Emscripten. Please use emcmake to configure.")
 endif()
 
 if(OTIO_CXX_EXAMPLES)
