@@ -13,6 +13,7 @@
 #include "opentimelineio/marker.h"
 #include "opentimelineio/mediaReference.h"
 #include "opentimelineio/externalReference.h"
+#include "opentimelineio/effect.h"
 #include "opentimelineio/serializableObject.h"
 #include "opentimelineio/errorStatus.h"
 
@@ -40,6 +41,11 @@ static emscripten::val create_track(const std::string& name) {
     auto* track = new Track(name);
     return emscripten::val(track);
 }
+
+static emscripten::val create_effect(const std::string& name, const std::string& effect_name) {
+    auto* effect = new Effect(name, effect_name);
+    return emscripten::val(effect);
+}
 #endif
 
 void otio_serializable_object_bindings() {
@@ -51,6 +57,7 @@ void otio_serializable_object_bindings() {
     function("create_external_reference", &create_external_reference);
     function("create_clip", &create_clip);
     function("create_track", &create_track);
+    function("create_effect", &create_effect);
     
     // Basic SerializableObject interface (no constructor due to protected destructor)
     class_<SerializableObject>("SerializableObject")
@@ -109,6 +116,14 @@ void otio_serializable_object_bindings() {
     class_<Track, base<Composition>>("Track")
         .function("kind", &Track::kind)
         .function("set_kind", &Track::set_kind)
+        ;
+    
+    // Effect
+    class_<Effect, base<SerializableObjectWithMetadata>>("Effect")
+        .function("effect_name", &Effect::effect_name)
+        .function("set_effect_name", &Effect::set_effect_name)
+        .function("enabled", &Effect::enabled)
+        .function("set_enabled", &Effect::set_enabled)
         ;
         
 #endif

@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTimelineIO E2E Comprehensive Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .test-section {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid #e9ecef;
+        }
+        .progress {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #28a745;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        .test-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .summary-card .count {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎬 OpenTimelineIO End-to-End Comprehensive Test</h1>
+        <p>This test validates all timeline variations and WASM module functionality in a browser environment.</p>
+        
+        <div id="loading" class="test-section info">
+            <span class="loading-spinner"></span> Loading WASM modules and initializing tests...
+        </div>
+        
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar">0%</div>
+        </div>
+        
+        <div id="test-summary" class="test-summary" style="display: none;"></div>
+        
+        <div id="module-loading" class="test-section" style="display: none;">
+            <h2>📦 Module Loading</h2>
+            <div id="module-loading-results"></div>
+        </div>
+        
+        <div id="basic-functionality" class="test-section" style="display: none;">
+            <h2>🔧 Basic Functionality</h2>
+            <div id="basic-functionality-results"></div>
+        </div>
+        
+        <div id="timeline-composition" class="test-section" style="display: none;">
+            <h2>🎞️ Timeline Composition</h2>
+            <div id="timeline-composition-results"></div>
+        </div>
+        
+        <div id="effect-system" class="test-section" style="display: none;">
+            <h2>✨ Effect System (NEW)</h2>
+            <div id="effect-system-results"></div>
+        </div>
+        
+        <div id="time-operations" class="test-section" style="display: none;">
+            <h2>⏰ Time Operations</h2>
+            <div id="time-operations-results"></div>
+        </div>
+        
+        <div id="serialization" class="test-section" style="display: none;">
+            <h2>💾 Serialization & JSON</h2>
+            <div id="serialization-results"></div>
+        </div>
+        
+        <div id="memory-management" class="test-section" style="display: none;">
+            <h2>🗑️ Memory Management</h2>
+            <div id="memory-management-results"></div>
+        </div>
+        
+        <div id="stress-testing" class="test-section" style="display: none;">
+            <h2>💪 Stress Testing</h2>
+            <div id="stress-testing-results"></div>
+        </div>
+    </div>
+
+    <script>
+        let OpenTimeModuleInstance = null;
+        let OpenTimelineIOModuleInstance = null;
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            warnings: 0
+        };
+        
+        const TEST_PHASES = [
+            'Module Loading',
+            'Basic Functionality', 
+            'Timeline Composition',
+            'Effect System',
+            'Time Operations',
+            'Serialization',
+            'Memory Management',
+            'Stress Testing'
+        ];
+        
+        let currentPhase = 0;
+        
+        function updateProgress(phase, isComplete = false) {
+            const percentage = isComplete ? 100 : ((phase / TEST_PHASES.length) * 100);
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${percentage}%`;
+            progressBar.textContent = isComplete ? 'Complete!' : `${Math.round(percentage)}% - ${TEST_PHASES[phase] || 'Testing...'}`;
+        }
+        
+        function updateSummary() {
+            const summary = document.getElementById('test-summary');
+            summary.innerHTML = `
+                <div class="summary-card success">
+                    <h3>✅ Passed</h3>
+                    <div class="count">${testResults.passed}</div>
+                </div>
+                <div class="summary-card error">
+                    <h3>❌ Failed</h3>
+                    <div class="count">${testResults.failed}</div>
+                </div>
+                <div class="summary-card warning">
+                    <h3>⚠️ Warnings</h3>
+                    <div class="count">${testResults.warnings}</div>
+                </div>
+                <div class="summary-card info">
+                    <h3>📊 Total</h3>
+                    <div class="count">${testResults.total}</div>
+                </div>
+            `;
+            summary.style.display = 'grid';
+        }
+        
+        function logTest(name, success, details = '', isWarning = false) {
+            testResults.total++;
+            if (success && !isWarning) {
+                testResults.passed++;
+            } else if (!success) {
+                testResults.failed++;
+            } else {
+                testResults.warnings++;
+            }
+            updateSummary();
+            
+            const icon = success ? (isWarning ? '⚠️' : '✅') : '❌';
+            const status = success ? (isWarning ? 'WARNING' : 'PASS') : 'FAIL';
+            console.log(`${icon} ${name}: ${status}${details ? ' - ' + details : ''}`);
+            return `${icon} ${name}: ${status}${details ? ' - ' + details : ''}\n`;
+        }
+        
+        async function loadModules() {
+            updateProgress(0);
+            const results = document.getElementById('module-loading-results');
+            let output = '<pre>';
+            
+            try {
+                // Load OpenTime module
+                output += logTest('Loading OpenTime WASM', true, 'Starting module load...');
+                const openTimeScript = document.createElement('script');
+                openTimeScript.src = '../build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                document.head.appendChild(openTimeScript);
+                await new Promise((resolve, reject) => {
+                    openTimeScript.onload = resolve;
+                    openTimeScript.onerror = reject;
+                });
+                
+                OpenTimeModuleInstance = await window.OpenTimeModule();
+                output += logTest('OpenTime Module Initialized', true, `Available functions: ${Object.keys(OpenTimeModuleInstance).length}`);
+                
+                // Load OpenTimelineIO module
+                output += logTest('Loading OpenTimelineIO WASM', true, 'Starting module load...');
+                const otioScript = document.createElement('script');
+                otioScript.src = '../build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                document.head.appendChild(otioScript);
+                await new Promise((resolve, reject) => {
+                    otioScript.onload = resolve;
+                    otioScript.onerror = reject;
+                });
+                
+                OpenTimelineIOModuleInstance = await window.OpenTimelineIOModule();
+                window.Module = OpenTimelineIOModuleInstance;
+                output += logTest('OpenTimelineIO Module Initialized', true, `Available functions: ${Object.keys(OpenTimelineIOModuleInstance).length}`);
+                
+                // Load wrapper classes
+                output += logTest('Loading Wrapper Classes', true, 'Starting wrapper load...');
+                const wrapperScript = document.createElement('script');
+                wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js?v=' + Date.now();
+                document.head.appendChild(wrapperScript);
+                await new Promise((resolve, reject) => {
+                    wrapperScript.onload = resolve;
+                    wrapperScript.onerror = reject;
+                });
+                
+                output += logTest('Wrapper Classes Loaded', true, `OTIO namespace: ${typeof window.OTIO}`);
+                
+                // Verify all required classes are available
+                const requiredClasses = ['Timeline', 'Track', 'Clip', 'ExternalReference', 'Stack', 'Effect'];
+                for (const className of requiredClasses) {
+                    const available = window.OTIO && typeof window.OTIO[className] === 'function';
+                    output += logTest(`${className} Class Available`, available, available ? 'Constructor found' : 'Missing constructor');
+                }
+                
+            } catch (error) {
+                output += logTest('Module Loading', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('module-loading').style.display = 'block';
+        }
+        
+        async function testBasicFunctionality() {
+            updateProgress(1);
+            const results = document.getElementById('basic-functionality-results');
+            let output = '<pre>';
+            
+            try {
+                // Test version and connection
+                const version = OpenTimelineIOModuleInstance.get_version();
+                output += logTest('Get Version', !!version, `Version: ${version}`);
+                
+                const connected = OpenTimelineIOModuleInstance.test_connection();
+                output += logTest('Test Connection', connected === true, `Connection: ${connected}`);
+                
+                // Test factory functions
+                const timelineHandle = OpenTimelineIOModuleInstance.create_timeline("Test Timeline");
+                output += logTest('Create Timeline Handle', timelineHandle > 0, `Handle: ${timelineHandle}`);
+                
+                const trackHandle = OpenTimelineIOModuleInstance.create_track("Test Track", "Video");
+                output += logTest('Create Track Handle', trackHandle > 0, `Handle: ${trackHandle}`);
+                
+                const clipHandle = OpenTimelineIOModuleInstance.create_clip("Test Clip");
+                output += logTest('Create Clip Handle', clipHandle > 0, `Handle: ${clipHandle}`);
+                
+                const effectHandle = OpenTimelineIOModuleInstance.create_effect("Test Effect", "Blur");
+                output += logTest('Create Effect Handle', effectHandle > 0, `Handle: ${effectHandle}`);
+                
+                // Test utility functions
+                const timelineName = OpenTimelineIOModuleInstance.timeline_name(timelineHandle);
+                output += logTest('Get Timeline Name', timelineName === "Test Timeline", `Name: ${timelineName}`);
+                
+                const effectName = OpenTimelineIOModuleInstance.effect_effect_name(effectHandle);
+                output += logTest('Get Effect Name', effectName === "Blur", `Effect Name: ${effectName}`);
+                
+                // Cleanup handles
+                OpenTimelineIOModuleInstance.delete_timeline(timelineHandle);
+                OpenTimelineIOModuleInstance.delete_track(trackHandle);
+                OpenTimelineIOModuleInstance.delete_clip(clipHandle);
+                OpenTimelineIOModuleInstance.delete_effect(effectHandle);
+                output += logTest('Cleanup Handles', true, 'All handles cleaned up');
+                
+            } catch (error) {
+                output += logTest('Basic Functionality', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('basic-functionality').style.display = 'block';
+        }
+        
+        async function testTimelineComposition() {
+            updateProgress(2);
+            const results = document.getElementById('timeline-composition-results');
+            let output = '<pre>';
+            
+            try {
+                // Create timeline and add tracks (replicating test_composition.html logic)
+                const timeline = new window.OTIO.Timeline("E2E Test Movie");
+                output += logTest('Create Timeline Object', !!timeline, `Name: "${timeline.name()}"`);
+                
+                const initialTrackCount = timeline.track_count();
+                output += logTest('Initial Track Count', initialTrackCount === 0, `Count: ${initialTrackCount}`);
+                
+                // Create and add video track
+                const videoTrack = new window.OTIO.Track("V1", "Video");
+                output += logTest('Create Video Track', !!videoTrack, `Name: "${videoTrack.name()}", Kind: ${videoTrack.kind()}`);
+                
+                const addVideoResult = timeline.add_track(videoTrack);
+                output += logTest('Add Video Track', addVideoResult === true, `Result: ${addVideoResult}`);
+                
+                // Create and add audio track
+                const audioTrack = new window.OTIO.Track("A1", "Audio");
+                const addAudioResult = timeline.add_track(audioTrack);
+                output += logTest('Add Audio Track', addAudioResult === true, `Result: ${addAudioResult}`);
+                
+                const finalTrackCount = timeline.track_count();
+                output += logTest('Final Track Count', finalTrackCount === 2, `Count: ${finalTrackCount}`);
+                
+                // Create clips with time ranges
+                const clip1 = new window.OTIO.Clip("Shot_01");
+                const clip1Range = new OpenTimeModuleInstance.TimeRange(
+                    new OpenTimeModuleInstance.RationalTime(0, 24),
+                    new OpenTimeModuleInstance.RationalTime(120, 24)
+                );
+                clip1.set_source_range(clip1Range);
+                output += logTest('Create Clip with Range', !!clip1, `Name: "${clip1.name()}"`);
+                
+                const addClip1Result = videoTrack.add_clip(clip1);
+                output += logTest('Add Clip to Track', addClip1Result === true, `Result: ${addClip1Result}`);
+                
+                // Test insertion
+                const clip2 = new window.OTIO.Clip("Insert_Clip");
+                const insertResult = videoTrack.insert_clip(0, clip2);
+                output += logTest('Insert Clip', insertResult === true, `Result: ${insertResult}`);
+                
+                const clipCount = videoTrack.clip_count();
+                output += logTest('Track Clip Count', clipCount === 2, `Count: ${clipCount}`);
+                
+                // Test track retrieval
+                const retrievedClip = videoTrack.get_clip(0);
+                const clipNameMatches = retrievedClip && retrievedClip.name() === "Insert_Clip";
+                output += logTest('Retrieve Clip by Index', clipNameMatches, `Retrieved: "${retrievedClip ? retrievedClip.name() : 'null'}"`);
+                
+                // Test timeline structure
+                const tracks = timeline.tracks();
+                output += logTest('Get Timeline Tracks', !!tracks, `Tracks object: ${tracks ? 'exists' : 'null'}`);
+                
+                if (tracks) {
+                    output += logTest('Tracks Length', tracks.length === 2, `Length: ${tracks.length}`);
+                }
+                
+                // Cleanup
+                clip1.dispose();
+                clip2.dispose();
+                videoTrack.dispose();
+                audioTrack.dispose();
+                timeline.dispose();
+                output += logTest('Timeline Composition Cleanup', true, 'All objects disposed');
+                
+            } catch (error) {
+                output += logTest('Timeline Composition', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('timeline-composition').style.display = 'block';
+        }
+        
+        async function testEffectSystem() {
+            updateProgress(3);
+            const results = document.getElementById('effect-system-results');
+            let output = '<pre>';
+            
+            try {
+                // Test Effect creation and properties
+                const effect = new window.OTIO.Effect("Color Correction", "ColorCorrector", true);
+                output += logTest('Create Effect Object', !!effect, `Name: "${effect.name()}"`);
+                
+                const effectName = effect.effect_name();
+                output += logTest('Get Effect Name', effectName === "ColorCorrector", `Effect Name: "${effectName}"`);
+                
+                const enabled = effect.enabled();
+                output += logTest('Get Effect Enabled', enabled === true, `Enabled: ${enabled}`);
+                
+                // Test setting properties
+                effect.set_name("Updated Color Correction");
+                const newName = effect.name();
+                output += logTest('Set Effect Name', newName === "Updated Color Correction", `New Name: "${newName}"`);
+                
+                effect.set_effect_name("UpdatedColorCorrector");
+                const newEffectName = effect.effect_name();
+                output += logTest('Set Effect Effect Name', newEffectName === "UpdatedColorCorrector", `New Effect Name: "${newEffectName}"`);
+                
+                effect.set_enabled(false);
+                const newEnabled = effect.enabled();
+                output += logTest('Set Effect Enabled', newEnabled === false, `New Enabled: ${newEnabled}`);
+                
+                // Test JSON serialization
+                const effectJson = effect.to_json_string();
+                output += logTest('Effect JSON Serialization', effectJson.length > 0, `JSON Length: ${effectJson.length}`);
+                
+                // Verify JSON contains expected data
+                try {
+                    const parsed = JSON.parse(effectJson);
+                    const hasExpectedFields = parsed.name && parsed.effect_name !== undefined && parsed.enabled !== undefined;
+                    output += logTest('Effect JSON Structure', hasExpectedFields, `Schema: ${parsed.OTIO_SCHEMA || 'undefined'}`);
+                } catch (e) {
+                    output += logTest('Effect JSON Parse', false, e.message);
+                }
+                
+                // Test multiple effects
+                const effects = [];
+                for (let i = 0; i < 3; i++) {
+                    const fx = new window.OTIO.Effect(`Effect${i}`, `Type${i}`);
+                    effects.push(fx);
+                }
+                output += logTest('Create Multiple Effects', effects.length === 3, `Created: ${effects.length} effects`);
+                
+                // Cleanup
+                effect.dispose();
+                for (const fx of effects) {
+                    fx.dispose();
+                }
+                output += logTest('Effect System Cleanup', true, 'All effects disposed');
+                
+            } catch (error) {
+                output += logTest('Effect System', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('effect-system').style.display = 'block';
+        }
+        
+        async function testTimeOperations() {
+            updateProgress(4);
+            const results = document.getElementById('time-operations-results');
+            let output = '<pre>';
+            
+            try {
+                // Test RationalTime operations
+                const time1 = new OpenTimeModuleInstance.RationalTime(100, 24);
+                const time2 = new OpenTimeModuleInstance.RationalTime(50, 24);
+                output += logTest('Create RationalTime Objects', true, `Time1: ${time1.value()}/${time1.rate()}, Time2: ${time2.value()}/${time2.rate()}`);
+                
+                // Test arithmetic
+                const sum = OpenTimeModuleInstance.add(time1, time2);
+                output += logTest('RationalTime Addition', sum.value() === 150, `Sum: ${sum.value()}/${sum.rate()}`);
+                
+                const diff = OpenTimeModuleInstance.subtract(time1, time2);
+                output += logTest('RationalTime Subtraction', diff.value() === 50, `Diff: ${diff.value()}/${diff.rate()}`);
+                
+                // Test TimeRange operations
+                const range = new OpenTimeModuleInstance.TimeRange(time1, time2);
+                output += logTest('Create TimeRange', !!range, `Start: ${range.start_time.value()}/${range.start_time.rate()}, Duration: ${range.duration.value()}/${range.duration.rate()}`);
+                
+                const endTime = range.end_time_exclusive();
+                output += logTest('TimeRange End Time', endTime.value() === 150, `End: ${endTime.value()}/${endTime.rate()}`);
+                
+                // Test OTIO time conversion
+                const otioTime = new OpenTimelineIOModuleInstance.OTIORationalTime(75, 24);
+                output += logTest('Create OTIO RationalTime', !!otioTime, `Value: ${otioTime.value()}/${otioTime.rate()}`);
+                
+                const seconds = otioTime.to_seconds();
+                const expectedSeconds = 75 / 24;
+                output += logTest('OTIO Time to Seconds', Math.abs(seconds - expectedSeconds) < 0.001, `Seconds: ${seconds.toFixed(3)}`);
+                
+            } catch (error) {
+                output += logTest('Time Operations', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('time-operations').style.display = 'block';
+        }
+        
+        async function testSerialization() {
+            updateProgress(5);
+            const results = document.getElementById('serialization-results');
+            let output = '<pre>';
+            
+            try {
+                // Create a complex timeline for serialization testing
+                const timeline = new window.OTIO.Timeline("Serialization Test");
+                const track = new window.OTIO.Track("V1", "Video");
+                const clip = new window.OTIO.Clip("Test Clip");
+                const effect = new window.OTIO.Effect("Test Effect", "Blur");
+                
+                // Set up media reference
+                const mediaRef = new window.OTIO.ExternalReference("file:///test/media.mov");
+                clip.set_media_reference(mediaRef);
+                
+                // Build composition
+                track.add_clip(clip);
+                timeline.add_track(track);
+                
+                // Test timeline serialization
+                const timelineJson = timeline.to_json_string();
+                output += logTest('Timeline Serialization', timelineJson.length > 100, `JSON Length: ${timelineJson.length}`);
+                
+                // Test track serialization
+                const trackJson = track.to_json_string();
+                output += logTest('Track Serialization', trackJson.length > 50, `JSON Length: ${trackJson.length}`);
+                
+                // Test clip serialization
+                const clipJson = clip.to_json_string();
+                output += logTest('Clip Serialization', clipJson.length > 50, `JSON Length: ${clipJson.length}`);
+                
+                // Test effect serialization
+                const effectJson = effect.to_json_string();
+                output += logTest('Effect Serialization', effectJson.length > 30, `JSON Length: ${effectJson.length}`);
+                
+                // Test media reference serialization
+                const mediaRefJson = mediaRef.to_json_string();
+                output += logTest('Media Reference Serialization', mediaRefJson.length > 30, `JSON Length: ${mediaRefJson.length}`);
+                
+                // Parse and validate timeline JSON structure
+                try {
+                    const parsed = JSON.parse(timelineJson);
+                    const hasValidStructure = parsed.OTIO_SCHEMA && parsed.name && parsed.tracks;
+                    output += logTest('Timeline JSON Structure', hasValidStructure, `Schema: ${parsed.OTIO_SCHEMA}`);
+                    
+                    if (parsed.tracks && parsed.tracks.children) {
+                        const trackCount = parsed.tracks.children.length;
+                        output += logTest('Timeline JSON Track Count', trackCount === 1, `Tracks: ${trackCount}`);
+                    }
+                } catch (e) {
+                    output += logTest('Timeline JSON Parse', false, e.message);
+                }
+                
+                // Cleanup
+                effect.dispose();
+                mediaRef.dispose();
+                clip.dispose();
+                track.dispose();
+                timeline.dispose();
+                output += logTest('Serialization Cleanup', true, 'All objects disposed');
+                
+            } catch (error) {
+                output += logTest('Serialization', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('serialization').style.display = 'block';
+        }
+        
+        async function testMemoryManagement() {
+            updateProgress(6);
+            const results = document.getElementById('memory-management-results');
+            let output = '<pre>';
+            
+            try {
+                // Test immediate disposal
+                const timeline1 = new window.OTIO.Timeline("Immediate Test");
+                timeline1.dispose();
+                output += logTest('Immediate Disposal', true, 'Timeline created and disposed immediately');
+                
+                // Test disposal after operations
+                const timeline2 = new window.OTIO.Timeline("Operations Test");
+                timeline2.set_name("Modified Name");
+                const name = timeline2.name();
+                timeline2.dispose();
+                output += logTest('Disposal After Operations', name === "Modified Name", `Final Name: "${name}"`);
+                
+                // Test multiple object disposal
+                const objects = [];
+                for (let i = 0; i < 5; i++) {
+                    objects.push(new window.OTIO.Timeline(`Timeline${i}`));
+                    objects.push(new window.OTIO.Track(`Track${i}`, "Video"));
+                    objects.push(new window.OTIO.Clip(`Clip${i}`));
+                    objects.push(new window.OTIO.Effect(`Effect${i}`, `Type${i}`));
+                }
+                
+                output += logTest('Create Multiple Objects', objects.length === 20, `Created: ${objects.length} objects`);
+                
+                // Dispose all objects
+                let disposalSuccesses = 0;
+                for (const obj of objects) {
+                    try {
+                        obj.dispose();
+                        disposalSuccesses++;
+                    } catch (e) {
+                        // Count failures but continue
+                    }
+                }
+                
+                output += logTest('Multiple Object Disposal', disposalSuccesses === objects.length, `Disposed: ${disposalSuccesses}/${objects.length}`);
+                
+                // Test disposal order independence
+                const clip = new window.OTIO.Clip("Order Test");
+                const mediaRef = new window.OTIO.ExternalReference("file:///test.mov");
+                clip.set_media_reference(mediaRef);
+                
+                // Dispose in different order
+                clip.dispose(); // Dispose clip first
+                mediaRef.dispose(); // Then dispose reference
+                output += logTest('Disposal Order Independence', true, 'Objects disposed in different order');
+                
+            } catch (error) {
+                output += logTest('Memory Management', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('memory-management').style.display = 'block';
+        }
+        
+        async function testStressTesting() {
+            updateProgress(7);
+            const results = document.getElementById('stress-testing-results');
+            let output = '<pre>';
+            
+            try {
+                const startTime = performance.now();
+                
+                // Stress test: Create many objects rapidly
+                const objectCount = 50;
+                const timelines = [];
+                const tracks = [];
+                const clips = [];
+                const effects = [];
+                
+                for (let i = 0; i < objectCount; i++) {
+                    timelines.push(new window.OTIO.Timeline(`StressTimeline${i}`));
+                    tracks.push(new window.OTIO.Track(`StressTrack${i}`, i % 2 === 0 ? "Video" : "Audio"));
+                    clips.push(new window.OTIO.Clip(`StressClip${i}`));
+                    effects.push(new window.OTIO.Effect(`StressEffect${i}`, `Type${i % 5}`));
+                }
+                
+                const creationTime = performance.now() - startTime;
+                output += logTest('Rapid Object Creation', true, `Created ${objectCount * 4} objects in ${creationTime.toFixed(2)}ms`);
+                
+                // Test operations on all objects
+                let operationSuccesses = 0;
+                const operationStartTime = performance.now();
+                
+                for (let i = 0; i < objectCount; i++) {
+                    try {
+                        timelines[i].set_name(`Modified${i}`);
+                        tracks[i].set_enabled(i % 2 === 0);
+                        clips[i].set_enabled(i % 3 === 0);
+                        effects[i].set_enabled(i % 4 === 0);
+                        
+                        // Trigger JSON serialization (expensive operation)
+                        timelines[i].to_json_string();
+                        effects[i].to_json_string();
+                        
+                        operationSuccesses++;
+                    } catch (e) {
+                        // Count failures but continue
+                    }
+                }
+                
+                const operationTime = performance.now() - operationStartTime;
+                output += logTest('Stress Operations', operationSuccesses === objectCount, `${operationSuccesses}/${objectCount} operations completed in ${operationTime.toFixed(2)}ms`);
+                
+                // Test mass disposal
+                const disposalStartTime = performance.now();
+                let disposalSuccesses = 0;
+                
+                [...effects, ...clips, ...tracks, ...timelines].forEach(obj => {
+                    try {
+                        obj.dispose();
+                        disposalSuccesses++;
+                    } catch (e) {
+                        // Count failures but continue
+                    }
+                });
+                
+                const disposalTime = performance.now() - disposalStartTime;
+                const totalObjects = objectCount * 4;
+                output += logTest('Mass Disposal', disposalSuccesses === totalObjects, `${disposalSuccesses}/${totalObjects} objects disposed in ${disposalTime.toFixed(2)}ms`);
+                
+                const totalTime = performance.now() - startTime;
+                output += logTest('Total Stress Test Time', true, `Complete stress test in ${totalTime.toFixed(2)}ms`);
+                
+                // Performance metrics
+                const avgCreationTime = creationTime / (objectCount * 4);
+                const avgOperationTime = operationTime / objectCount;
+                const avgDisposalTime = disposalTime / totalObjects;
+                
+                output += `\nPerformance Metrics:\n`;
+                output += `  Avg Creation Time: ${avgCreationTime.toFixed(3)}ms per object\n`;
+                output += `  Avg Operation Time: ${avgOperationTime.toFixed(3)}ms per object\n`;
+                output += `  Avg Disposal Time: ${avgDisposalTime.toFixed(3)}ms per object\n`;
+                
+            } catch (error) {
+                output += logTest('Stress Testing', false, error.message);
+            }
+            
+            output += '</pre>';
+            results.innerHTML = output;
+            document.getElementById('stress-testing').style.display = 'block';
+        }
+        
+        async function runAllTests() {
+            document.getElementById('loading').style.display = 'none';
+            
+            try {
+                await loadModules();
+                await testBasicFunctionality();
+                await testTimelineComposition();
+                await testEffectSystem();
+                await testTimeOperations();
+                await testSerialization();
+                await testMemoryManagement();
+                await testStressTesting();
+                
+                updateProgress(TEST_PHASES.length, true);
+                
+                // Final summary
+                const allPassed = testResults.failed === 0;
+                const summaryClass = allPassed ? 'success' : 'error';
+                const summaryIcon = allPassed ? '🎉' : '❌';
+                
+                document.body.insertAdjacentHTML('beforeend', `
+                    <div class="test-container ${summaryClass}">
+                        <h2>${summaryIcon} Test Summary</h2>
+                        <p><strong>Total Tests:</strong> ${testResults.total}</p>
+                        <p><strong>Passed:</strong> ${testResults.passed}</p>
+                        <p><strong>Failed:</strong> ${testResults.failed}</p>
+                        <p><strong>Warnings:</strong> ${testResults.warnings}</p>
+                        <p><strong>Success Rate:</strong> ${((testResults.passed / testResults.total) * 100).toFixed(1)}%</p>
+                        ${allPassed ? 
+                            '<p>🎬 All timeline variations and WASM functionality verified successfully!</p>' :
+                            '<p>⚠️ Some tests failed. Please check the detailed results above.</p>'
+                        }
+                    </div>
+                `);
+                
+            } catch (error) {
+                console.error('Test execution error:', error);
+                document.body.insertAdjacentHTML('beforeend', `
+                    <div class="test-container error">
+                        <h2>❌ Test Execution Failed</h2>
+                        <p>Error: ${error.message}</p>
+                        <pre>${error.stack}</pre>
+                    </div>
+                `);
+            }
+        }
+        
+        // Start tests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎬 Starting OpenTimelineIO E2E Comprehensive Tests...');
+            runAllTests();
+        });
+    </script>
+</body>
+</html> 

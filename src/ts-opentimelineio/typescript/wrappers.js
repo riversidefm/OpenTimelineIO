@@ -50,6 +50,9 @@ function wrapObject(handle) {
         case 'ExternalReference.1':
         case 'ExternalReference':
             return ExternalReference._fromHandle(handle);
+        case 'Effect.1':
+        case 'Effect':
+            return Effect._fromHandle(handle);
         default:
             console.warn('Unknown schema type:', schemaName);
             return null;
@@ -206,6 +209,24 @@ class Clip {
     
     set_media_reference(ref) {
         Module.clip_set_media_reference(this._handle, ref._getHandle());
+    }
+    
+    // Effect management methods
+    add_effect(effect) {
+        return Module.clip_add_effect(this._handle, effect._getHandle());
+    }
+    
+    effect_count() {
+        return Module.clip_effects_count(this._handle);
+    }
+    
+    get_effect(index) {
+        const effectHandle = Module.clip_get_effect(this._handle, index);
+        return effectHandle ? Effect._fromHandle(effectHandle) : null;
+    }
+    
+    remove_effect(index) {
+        return Module.clip_remove_effect(this._handle, index);
     }
     
     dispose() {
@@ -446,7 +467,67 @@ class Stack {
     }
 }
 
+class Effect {
+    constructor(name = "", effect_name = "", enabled = true) {
+        this._handle = Module.create_effect(name, effect_name);
+        if (enabled !== true) {
+            Module.effect_set_enabled(this._handle, enabled);
+        }
+    }
+    
+    static _fromHandle(handle) {
+        const effect = Object.create(Effect.prototype);
+        effect._handle = handle;
+        return effect;
+    }
+    
+    _getHandle() {
+        return this._handle;
+    }
+    
+    name() {
+        return Module.effect_name(this._handle);
+    }
+    
+    set_name(name) {
+        Module.effect_set_name(this._handle, name);
+    }
+    
+    effect_name() {
+        return Module.effect_effect_name(this._handle);
+    }
+    
+    set_effect_name(effect_name) {
+        Module.effect_set_effect_name(this._handle, effect_name);
+    }
+    
+    enabled() {
+        return Module.effect_enabled(this._handle);
+    }
+    
+    set_enabled(enabled) {
+        Module.effect_set_enabled(this._handle, enabled);
+    }
+    
+    to_json_string() {
+        return Module.effect_to_json_string(this._handle);
+    }
+    
+    dispose() {
+        if (this._handle && this._handle !== 0) {
+            try {
+                console.log('Disposing effect with handle:', this._handle);
+                Module.delete_effect(this._handle);
+                this._handle = null;
+            } catch (error) {
+                console.warn('Error disposing effect:', error);
+                this._handle = null; // Mark as disposed even if error
+            }
+        }
+    }
+}
+
 // Export for use
 if (typeof window !== 'undefined') {
-    window.OTIO = { Timeline, Clip, Track, ExternalReference, Stack };
+    window.OTIO = { Timeline, Clip, Track, ExternalReference, Stack, Effect };
 } 

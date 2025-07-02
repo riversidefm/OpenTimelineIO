@@ -11,6 +11,7 @@
 #include "opentimelineio/clip.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/externalReference.h"
+#include "opentimelineio/effect.h"
 #include "opentimelineio/serialization.h"
 #include "opentimelineio/deserialization.h"
 #include "opentimelineio/anyDictionary.h"
@@ -43,14 +44,15 @@ struct OTIODeleter {
 // Wrapper functions that create OTIO objects and return void pointers (opaque handles)
 // This avoids type registration issues with Embind
 void* create_timeline(const std::string& name = "") {
-    Timeline* timeline = new Timeline(name);
-    // Properly initialize reference counting by creating a retainer and immediately releasing it
-    SerializableObject::Retainer<Timeline> retainer(timeline);
-    return static_cast<void*>(retainer.take_value());
+        Timeline* timeline = new Timeline(name);
+        if (!timeline) {
+            return nullptr;
+        }
+        return static_cast<void*>(timeline);
 }
 
 void* create_track(const std::string& name = "", const std::string& kind = "Video") {
-    Track* track = new Track(name, std::nullopt, kind);
+    Track* track = new Track(name, {}, kind);
     // Properly initialize reference counting
     SerializableObject::Retainer<Track> retainer(track);
     return static_cast<void*>(retainer.take_value());
@@ -77,6 +79,13 @@ void* create_stack(const std::string& name = "") {
     return static_cast<void*>(retainer.take_value());
 }
 
+void* create_effect(const std::string& name = "", const std::string& effect_name = "") {
+    Effect* effect = new Effect(name, effect_name);
+    // Properly initialize reference counting
+    SerializableObject::Retainer<Effect> retainer(effect);
+    return static_cast<void*>(retainer.take_value());
+}
+
 // Cleanup is now handled directly in the lambda functions below
 
 // Test functions
@@ -100,14 +109,20 @@ EMSCRIPTEN_BINDINGS(otio_core) {
         .function("to_seconds", static_cast<double(RationalTime::*)() const>(&RationalTime::to_seconds))
         .function("rescaled_to", static_cast<RationalTime(RationalTime::*)(double) const>(&RationalTime::rescaled_to))
         .function("almost_equal", &RationalTime::almost_equal)
+        .function("add", +[](const RationalTime& self, const RationalTime& other) -> RationalTime {
+            return self + other;
+        })
+        .function("subtract", +[](const RationalTime& self, const RationalTime& other) -> RationalTime {
+            return self - other;
+        })
         ;
         
     class_<TimeRange>("OTIOTimeRange")
         .constructor<>()
         .constructor<RationalTime>()
         .constructor<RationalTime, RationalTime>()
-        .property("start_time", &TimeRange::start_time)
-        .property("duration", &TimeRange::duration)
+        .function("start_time", &TimeRange::start_time)
+        .function("duration", &TimeRange::duration)
         .function("end_time_inclusive", &TimeRange::end_time_inclusive)
         .function("end_time_exclusive", &TimeRange::end_time_exclusive)
         .function("duration_extended_by", &TimeRange::duration_extended_by)
@@ -154,6 +169,10 @@ EMSCRIPTEN_BINDINGS(otio_core) {
         void* ptr = create_stack(name);
         return reinterpret_cast<size_t>(ptr);
     });
+    function("create_effect", +[](const std::string& name, const std::string& effect_name) -> size_t {
+        void* ptr = create_effect(name, effect_name);
+        return reinterpret_cast<size_t>(ptr);
+    });
     
     // Cleanup functions (IMPORTANT: Use these to properly dispose of objects!)
     function("delete_timeline", +[](size_t ptr) {
@@ -181,13 +200,18 @@ EMSCRIPTEN_BINDINGS(otio_core) {
         Stack* obj = reinterpret_cast<Stack*>(ptr);
         if (obj) obj->possibly_delete();
     });
+    function("delete_effect", +[](size_t ptr) {
+        if (ptr == 0) return;
+        Effect* obj = reinterpret_cast<Effect*>(ptr);
+        if (obj) obj->possibly_delete();
+    });
     
     // Timeline utility functions (using size_t to avoid type issues)
     function("timeline_name", 
         +[](size_t ptr) -> std::string { 
             if (ptr == 0) return "";
             Timeline* obj = reinterpret_cast<Timeline*>(ptr);
-            return obj ? obj->name() : ""; 
+            return obj ? obj->name() : "";
         });
     function("timeline_set_name", 
         +[](size_t ptr, const std::string& name) { 
@@ -494,6 +518,98 @@ EMSCRIPTEN_BINDINGS(otio_core) {
             } catch (...) {
                 return "null";
             }
+        });
+    
+    // Effect utility functions
+    function("effect_name", 
+        +[](size_t ptr) -> std::string { 
+            if (ptr == 0) return "";
+            Effect* obj = reinterpret_cast<Effect*>(ptr);
+            return obj ? obj->name() : ""; 
+        });
+    function("effect_set_name", 
+        +[](size_t ptr, const std::string& name) { 
+            if (ptr == 0) return;
+            Effect* obj = reinterpret_cast<Effect*>(ptr);
+            if (obj) obj->set_name(name); 
+        });
+    function("effect_effect_name", 
+        +[](size_t ptr) -> std::string { 
+            if (ptr == 0) return "";
+            Effect* obj = reinterpret_cast<Effect*>(ptr);
+            return obj ? obj->effect_name() : ""; 
+        });
+    function("effect_set_effect_name", 
+        +[](size_t ptr, const std::string& effect_name) { 
+            if (ptr == 0) return;
+            Effect* obj = reinterpret_cast<Effect*>(ptr);
+            if (obj) obj->set_effect_name(effect_name); 
+        });
+    function("effect_enabled", 
+        +[](size_t ptr) -> bool { 
+            if (ptr == 0) return false;
+            Effect* obj = reinterpret_cast<Effect*>(ptr);
+            return obj ? obj->enabled() : false; 
+        });
+    function("effect_set_enabled", 
+        +[](size_t ptr, bool enabled) { 
+            if (ptr == 0) return;
+            Effect* obj = reinterpret_cast<Effect*>(ptr);
+            if (obj) obj->set_enabled(enabled); 
+        });
+    function("effect_to_json_string", 
+        +[](size_t ptr) -> std::string { 
+            if (ptr == 0) return "null";
+            Effect* obj = reinterpret_cast<Effect*>(ptr);
+            if (!obj) return "null";
+            
+            try {
+                // Create a temporary retainer to ensure proper reference counting during serialization
+                SerializableObject::Retainer<Effect> temp_retainer(obj);
+                std::string result = obj->to_json_string();
+                temp_retainer.take_value(); // Release without decrementing (since we don't own it)
+                return result;
+            } catch (...) {
+                return "null";
+            }
+        });
+    
+    // Clip effect management functions
+    function("clip_effects_count", 
+        +[](size_t ptr) -> int { 
+            if (ptr == 0) return 0;
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            if (!obj) return 0;
+            return static_cast<int>(obj->effects().size()); 
+        });
+    function("clip_get_effect", 
+        +[](size_t ptr, int index) -> size_t { 
+            if (ptr == 0) return 0;
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            if (!obj) return 0;
+            const auto& effects = obj->effects();
+            if (index < 0 || index >= static_cast<int>(effects.size())) return 0;
+            Effect* effect = effects[index].value;
+            return reinterpret_cast<size_t>(effect);
+        });
+    function("clip_add_effect", 
+        +[](size_t ptr, size_t effectPtr) -> bool { 
+            if (ptr == 0 || effectPtr == 0) return false;
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            Effect* effect = reinterpret_cast<Effect*>(effectPtr);
+            if (!obj || !effect) return false;
+            obj->effects().push_back(SerializableObject::Retainer<Effect>(effect));
+            return true; 
+        });
+    function("clip_remove_effect", 
+        +[](size_t ptr, int index) -> bool { 
+            if (ptr == 0) return false;
+            Clip* obj = reinterpret_cast<Clip*>(ptr);
+            if (!obj) return false;
+            auto& effects = obj->effects();
+            if (index < 0 || index >= static_cast<int>(effects.size())) return false;
+            effects.erase(effects.begin() + index);
+            return true; 
         });
     
     // Helper function to determine object type for wrapper creation

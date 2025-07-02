@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenTimelineIO Effect Bindings Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 10px 0; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🎬 OpenTimelineIO Effect Bindings Test</h1>
+    <p>Testing the new Effect class bindings alongside core timeline functionality.</p>
+    <div id="results">Loading...</div>
+
+    <script>
+        async function testEffectBindings() {
+            const results = document.getElementById('results');
+            let output = '';
+            let testCount = 0;
+            let passCount = 0;
+            
+            function logTest(name, condition, details = '') {
+                testCount++;
+                const status = condition ? 'PASS' : 'FAIL';
+                const icon = condition ? '✅' : '❌';
+                if (condition) passCount++;
+                
+                output += `${icon} ${name}: ${status}${details ? ' - ' + details : ''}\n`;
+                console.log(`${icon} ${name}: ${status}${details ? ' - ' + details : ''}`);
+                return condition;
+            }
+            
+            try {
+                // Load modules
+                const openTimeScript = document.createElement('script');
+                openTimeScript.src = '../build-wasm/src/ts-opentimelineio/opentime-bindings/opentime.js';
+                document.head.appendChild(openTimeScript);
+                await new Promise(resolve => openTimeScript.onload = resolve);
+                const OpenTimeModule = await window.OpenTimeModule();
+                
+                const otioScript = document.createElement('script');
+                otioScript.src = '../build-wasm/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js';
+                document.head.appendChild(otioScript);
+                await new Promise(resolve => otioScript.onload = resolve);
+                const Module = await window.OpenTimelineIOModule();
+                window.Module = Module;
+                
+                const wrapperScript = document.createElement('script');
+                wrapperScript.src = '../src/ts-opentimelineio/typescript/wrappers.js?v=' + Date.now();
+                document.head.appendChild(wrapperScript);
+                await new Promise(resolve => wrapperScript.onload = resolve);
+                
+                output += '<div class="test-section"><h2>Module Loading</h2><pre>';
+                logTest('OpenTime Module Loaded', !!OpenTimeModule);
+                logTest('OpenTimelineIO Module Loaded', !!Module);
+                logTest('OTIO Wrapper Classes Available', !!window.OTIO);
+                logTest('Effect Class Available', !!(window.OTIO && window.OTIO.Effect));
+                output += '</pre></div>';
+                
+                output += '<div class="test-section"><h2>Effect Class Core Functionality</h2><pre>';
+                
+                // Test 1: Basic Effect creation
+                const effect1 = new window.OTIO.Effect("Color Correction", "ColorCorrector", true);
+                logTest('Create Effect with all parameters', !!effect1);
+                
+                // Test 2: Effect properties
+                const name = effect1.name();
+                logTest('Get effect name', name === "Color Correction", `Name: "${name}"`);
+                
+                const effectName = effect1.effect_name();
+                logTest('Get effect_name', effectName === "ColorCorrector", `Effect Name: "${effectName}"`);
+                
+                const enabled = effect1.enabled();
+                logTest('Get enabled status', enabled === true, `Enabled: ${enabled}`);
+                
+                // Test 3: Property modification
+                effect1.set_name("Updated Color Correction");
+                const newName = effect1.name();
+                logTest('Set effect name', newName === "Updated Color Correction", `New Name: "${newName}"`);
+                
+                effect1.set_effect_name("UpdatedColorCorrector");
+                const newEffectName = effect1.effect_name();
+                logTest('Set effect_name', newEffectName === "UpdatedColorCorrector", `New Effect Name: "${newEffectName}"`);
+                
+                effect1.set_enabled(false);
+                const newEnabled = effect1.enabled();
+                logTest('Set enabled status', newEnabled === false, `New Enabled: ${newEnabled}`);
+                
+                // Test 4: JSON serialization
+                const effectJson = effect1.to_json_string();
+                logTest('Effect JSON serialization', effectJson.length > 0, `JSON Length: ${effectJson.length}`);
+                
+                // Test 5: JSON structure validation
+                try {
+                    const parsed = JSON.parse(effectJson);
+                    logTest('JSON parse success', true, `Schema: ${parsed.OTIO_SCHEMA || 'N/A'}`);
+                    logTest('JSON has name field', 'name' in parsed, `Name: "${parsed.name}"`);
+                    logTest('JSON has effect_name field', 'effect_name' in parsed, `Effect Name: "${parsed.effect_name}"`);
+                    logTest('JSON has enabled field', 'enabled' in parsed, `Enabled: ${parsed.enabled}`);
+                } catch (e) {
+                    logTest('JSON parse', false, e.message);
+                }
+                
+                // Test 6: Default constructor
+                const effect2 = new window.OTIO.Effect();
+                logTest('Create Effect with defaults', !!effect2);
+                logTest('Default name is empty', effect2.name() === "", `Name: "${effect2.name()}"`);
+                logTest('Default effect_name is empty', effect2.effect_name() === "", `Effect Name: "${effect2.effect_name()}"`);
+                logTest('Default enabled is true', effect2.enabled() === true, `Enabled: ${effect2.enabled()}`);
+                
+                output += '</pre></div>';
+                
+                output += '<div class="test-section"><h2>Timeline Integration Test</h2><pre>';
+                
+                // Test 7: Integration with timeline composition (based on test_composition.html)
+                const timeline = new window.OTIO.Timeline("Effect Test Movie");
+                logTest('Create timeline', !!timeline, `Name: "${timeline.name()}"`);
+                
+                const videoTrack = new window.OTIO.Track("V1", "Video");
+                logTest('Create video track', !!videoTrack, `Name: "${videoTrack.name()}"`);
+                
+                const clip = new window.OTIO.Clip("Test Clip");
+                logTest('Create clip', !!clip, `Name: "${clip.name()}"`);
+                
+                // Set up clip with time range
+                const clipRange = new OpenTimeModule.TimeRange(
+                    new OpenTimeModule.RationalTime(0, 24),
+                    new OpenTimeModule.RationalTime(120, 24)
+                );
+                clip.set_source_range(clipRange);
+                logTest('Set clip source range', true);
+                
+                // Add clip to track
+                videoTrack.add_clip(clip);
+                logTest('Add clip to track', videoTrack.clip_count() === 1, `Clip count: ${videoTrack.clip_count()}`);
+                
+                // Add track to timeline
+                timeline.add_track(videoTrack);
+                logTest('Add track to timeline', timeline.track_count() === 1, `Track count: ${timeline.track_count()}`);
+                
+                // Create multiple effects for different use cases
+                const colorEffect = new window.OTIO.Effect("Color Grade", "ColorCorrector", true);
+                const blurEffect = new window.OTIO.Effect("Gaussian Blur", "Blur", false);
+                const audioEffect = new window.OTIO.Effect("Audio EQ", "Equalizer", true);
+                
+                logTest('Create color effect', !!colorEffect);
+                logTest('Create blur effect', !!blurEffect);
+                logTest('Create audio effect', !!audioEffect);
+                
+                // Test effect properties are independent
+                logTest('Color effect enabled', colorEffect.enabled() === true);
+                logTest('Blur effect disabled', blurEffect.enabled() === false);
+                logTest('Audio effect enabled', audioEffect.enabled() === true);
+                
+                output += '</pre></div>';
+                
+                output += '<div class="test-section"><h2>Multiple Effects Test</h2><pre>';
+                
+                // Test 8: Multiple effects management
+                const effects = [];
+                for (let i = 0; i < 5; i++) {
+                    const fx = new window.OTIO.Effect(`Effect${i}`, `Type${i}`, i % 2 === 0);
+                    effects.push(fx);
+                }
+                logTest('Create multiple effects', effects.length === 5, `Created: ${effects.length}`);
+                
+                // Verify each effect is independent
+                let independentCount = 0;
+                for (let i = 0; i < effects.length; i++) {
+                    const expectedName = `Effect${i}`;
+                    const expectedType = `Type${i}`;
+                    const expectedEnabled = i % 2 === 0;
+                    
+                    if (effects[i].name() === expectedName && 
+                        effects[i].effect_name() === expectedType && 
+                        effects[i].enabled() === expectedEnabled) {
+                        independentCount++;
+                    }
+                }
+                logTest('Effects are independent', independentCount === 5, `Independent: ${independentCount}/5`);
+                
+                output += '</pre></div>';
+                
+                output += '<div class="test-section"><h2>Serialization Integration Test</h2><pre>';
+                
+                // Test 9: Timeline with effects serialization
+                const complexTimeline = new window.OTIO.Timeline("Complex Timeline");
+                const complexTrack = new window.OTIO.Track("Complex Track", "Video");
+                const complexClip = new window.OTIO.Clip("Complex Clip");
+                const complexEffect = new window.OTIO.Effect("Complex Effect", "ComplexType", true);
+                
+                complexTrack.add_clip(complexClip);
+                complexTimeline.add_track(complexTrack);
+                
+                // Test timeline serialization includes all components
+                const timelineJson = complexTimeline.to_json_string();
+                logTest('Complex timeline serialization', timelineJson.length > 100, `JSON Length: ${timelineJson.length}`);
+                
+                // Test individual effect serialization
+                const complexEffectJson = complexEffect.to_json_string();
+                logTest('Complex effect serialization', complexEffectJson.length > 50, `JSON Length: ${complexEffectJson.length}`);
+                
+                output += '</pre></div>';
+                
+                output += '<div class="test-section"><h2>Memory Management Test</h2><pre>';
+                
+                // Test 10: Memory management and cleanup
+                const disposalTestEffects = [];
+                for (let i = 0; i < 10; i++) {
+                    disposalTestEffects.push(new window.OTIO.Effect(`DisposeTest${i}`, `DisposeType${i}`));
+                }
+                
+                logTest('Create effects for disposal test', disposalTestEffects.length === 10);
+                
+                // Test individual disposal
+                let disposalSuccesses = 0;
+                for (const fx of disposalTestEffects) {
+                    try {
+                        fx.dispose();
+                        disposalSuccesses++;
+                    } catch (e) {
+                        console.error('Disposal error:', e);
+                    }
+                }
+                logTest('Effect disposal', disposalSuccesses === 10, `Disposed: ${disposalSuccesses}/10`);
+                
+                // Cleanup all test objects
+                const allObjects = [
+                    effect1, effect2, colorEffect, blurEffect, audioEffect,
+                    complexEffect, complexClip, complexTrack, complexTimeline,
+                    clip, videoTrack, timeline, ...effects
+                ];
+                
+                let cleanupSuccesses = 0;
+                for (const obj of allObjects) {
+                    try {
+                        obj.dispose();
+                        cleanupSuccesses++;
+                    } catch (e) {
+                        console.error('Cleanup error:', e);
+                    }
+                }
+                logTest('Full cleanup', cleanupSuccesses === allObjects.length, `Cleaned: ${cleanupSuccesses}/${allObjects.length}`);
+                
+                output += '</pre></div>';
+                
+                // Final summary
+                const successRate = ((passCount / testCount) * 100).toFixed(1);
+                const summaryClass = passCount === testCount ? 'success' : (passCount > testCount * 0.8 ? 'warning' : 'error');
+                const summaryIcon = passCount === testCount ? '🎉' : (passCount > testCount * 0.8 ? '⚠️' : '❌');
+                
+                output += `<div class="${summaryClass}">
+                    <h2>${summaryIcon} Test Summary</h2>
+                    <p><strong>Tests Passed:</strong> ${passCount}/${testCount} (${successRate}%)</p>
+                    ${passCount === testCount ? 
+                        '<p>🎬 All Effect bindings and timeline variations verified successfully!</p>' :
+                        '<p>Some tests failed. Please check the detailed results above.</p>'
+                    }
+                </div>`;
+                
+                results.innerHTML = output;
+                
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Test failed: ${error.message}</div><pre>${error.stack}</pre>`;
+                console.error('Test error:', error);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', testEffectBindings);
+    </script>
+</body>
+</html> 

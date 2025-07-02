@@ -110,6 +110,7 @@ declare module 'opentimelineio' {
   export function create_clip(name: string): Handle;
   export function create_external_reference(target_url: string): Handle;
   export function create_stack(name: string): Handle;
+  export function create_effect(name: string, effect_name: string): Handle;
   
   // Cleanup functions (internal)
   export function delete_timeline(handle: Handle): void;
@@ -117,6 +118,7 @@ declare module 'opentimelineio' {
   export function delete_clip(handle: Handle): void;
   export function delete_external_reference(handle: Handle): void;
   export function delete_stack(handle: Handle): void;
+  export function delete_effect(handle: Handle): void;
   
   // Timeline utility functions (internal)
   export function timeline_name(handle: Handle): string;
@@ -168,6 +170,15 @@ declare module 'opentimelineio' {
   export function stack_name(handle: Handle): string;
   export function stack_set_name(handle: Handle, name: string): void;
   export function stack_to_json_string(handle: Handle): string;
+
+  // Effect utility functions (internal)
+  export function effect_name(handle: Handle): string;
+  export function effect_set_name(handle: Handle, name: string): void;
+  export function effect_effect_name(handle: Handle): string;
+  export function effect_set_effect_name(handle: Handle, effect_name: string): void;
+  export function effect_enabled(handle: Handle): boolean;
+  export function effect_set_enabled(handle: Handle, enabled: boolean): void;
+  export function effect_to_json_string(handle: Handle): string;
 
   // Helper functions (internal)
   export function get_object_schema_name(handle: Handle): string;
@@ -261,6 +272,18 @@ declare module 'opentimelineio' {
     remove(index: number): boolean;
     index_of(item: Track): number;
     
+    dispose(): void;
+  }
+  
+  export class Effect {
+    constructor(name?: string, effect_name?: string, enabled?: boolean);
+    name(): string;
+    set_name(name: string): void;
+    effect_name(): string;
+    set_effect_name(effect_name: string): void;
+    enabled(): boolean;
+    set_enabled(enabled: boolean): void;
+    to_json_string(): string;
     dispose(): void;
   }
   
