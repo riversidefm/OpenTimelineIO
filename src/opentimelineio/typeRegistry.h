@@ -27,9 +27,9 @@ class AnyDictionary;
 /// serialize natively, since we only serialize 64 bit signed ints.
 ///@{
 
-using schema_version_map = std::unordered_map<std::string, int64_t>;
+using schema_version_map = std::map<std::string, int64_t>;
 using label_to_schema_version_map =
-    std::unordered_map<std::string, schema_version_map>;
+    std::map<std::string, schema_version_map>;
 
 ///@}
 
