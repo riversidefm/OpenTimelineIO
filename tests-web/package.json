@@ -1,0 +1,26 @@
+{
+  "name": "opentimelineio-web-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for OpenTimelineIO TypeScript bindings",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:composition": "playwright test tests/composition.spec.ts",
+    "test:e2e": "playwright test tests/e2e-comprehensive.spec.ts",
+    "test:bindings": "playwright test tests/typescript-bindings.spec.ts",
+    "test:ui": "playwright test --ui",
+    "install-browsers": "playwright install",
+    "verify-setup": "node test-setup.js",
+    "test:verify": "npm run verify-setup && npm test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["opentimelineio", "typescript", "wasm", "e2e", "testing"],
+  "author": "OpenTimelineIO Contributors",
+  "license": "Apache-2.0"
+}
