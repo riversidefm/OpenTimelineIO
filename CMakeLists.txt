@@ -28,6 +28,7 @@ project(OpenTimelineIO VERSION ${OTIO_VERSION} LANGUAGES C CXX)
 # Installation options
 option(OTIO_CXX_INSTALL               "Install the C++ bindings" ON)
 option(OTIO_PYTHON_INSTALL            "Install the Python bindings" OFF)
+option(OTIO_TYPESCRIPT_INSTALL        "Install the Python bindings" OFF)
 option(OTIO_DEPENDENCIES_INSTALL      "Install OTIO's C++ header dependencies (Imath)" ON)
 option(OTIO_INSTALL_PYTHON_MODULES    "Install OTIO pure Python modules/files" ON)
 option(OTIO_INSTALL_COMMANDLINE_TOOLS "Install the OTIO command line tools" ON)
@@ -102,6 +103,12 @@ if(OTIO_PYTHON_INSTALL)
 else()
     set(OTIO_RESOLVED_CXX_DYLIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib")
     message(STATUS "OTIO C++ installing to ${CMAKE_INSTALL_PREFIX}")
+endif()
+
+if (OTIO_TYPESCRIPT_INSTALL)
+    if (NOT EMSCRIPTEN)
+        message(FATAL_ERROR "OTIO_TYPESCRIPT_INSTALL requires Emscripten to be enabled")
+    endif()
 endif()
 
 if(OTIO_SHARED_LIBS)
@@ -275,6 +282,10 @@ endif()
 
 if(OTIO_PYTHON_INSTALL)
     add_subdirectory(src/py-opentimelineio)
+endif()
+
+if(OTIO_TYPESCRIPT_INSTALL)
+    add_subdirectory(src/ts-opentimelineio)
 endif()
 
 if(OTIO_CXX_EXAMPLES)
