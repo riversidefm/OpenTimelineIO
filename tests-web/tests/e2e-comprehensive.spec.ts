@@ -6,14 +6,99 @@ import {
   verifyModulesWorking
 } from './utils/test-helpers';
 
+// Type definitions based on OpenTimelineIO TypeScript bindings
+interface OTIORationalTime {
+  value(): number;
+  rate(): number;
+  to_seconds(): number;
+  rescaled_to(rate: number): OTIORationalTime;
+  almost_equal(other: OTIORationalTime, delta?: number): boolean;
+  add(other: OTIORationalTime): OTIORationalTime;
+  subtract(other: OTIORationalTime): OTIORationalTime;
+}
+
+interface OTIOTimeRange {
+  start_time(): OTIORationalTime;
+  duration(): OTIORationalTime;
+  end_time_inclusive(): OTIORationalTime;
+  end_time_exclusive(): OTIORationalTime;
+  extended_by(other: OTIOTimeRange): OTIOTimeRange;
+  contains_time(time: OTIORationalTime): boolean;
+}
+
+interface OpenTimeRationalTime {
+  value(): number;
+  rate(): number;
+  rescaled_to(rate: number): OpenTimeRationalTime;
+  rescaled_to(other: OpenTimeRationalTime): OpenTimeRationalTime;
+}
+
+interface OpenTimeRange {
+  start_time: OpenTimeRationalTime;
+  duration: OpenTimeRationalTime;
+  end_time_inclusive(): OpenTimeRationalTime;
+  extended_by(other: OpenTimeRange): OpenTimeRange;
+}
+
+interface OTIOTimeline {
+  name(): string;
+  set_name(name: string): void;
+  track_count(): number;
+  add_track(track: OTIOTrack): boolean;
+  get_track(index: number): OTIOTrack | null;
+  to_json_string(): string;
+  dispose(): void;
+}
+
+interface OTIOTrack {
+  name(): string;
+  set_name(name: string): void;
+  kind(): string;
+  clip_count(): number;
+  add_clip(clip: OTIOClip): boolean;
+  get_clip(index: number): OTIOClip | null;
+  dispose(): void;
+}
+
+interface OTIOClip {
+  name(): string;
+  set_name(name: string): void;
+  source_range(): OTIOTimeRange | null;
+  set_source_range(range: OTIOTimeRange | OpenTimeRange | null): void;
+  duration(): OTIORationalTime;
+  enabled(): boolean;
+  set_enabled(enabled: boolean): void;
+  add_effect(effect: OTIOEffect): boolean;
+  effect_count(): number;
+  get_effect(index: number): OTIOEffect | null;
+  remove_effect(index: number): boolean;
+  to_json_string(): string;
+  dispose(): void;
+}
+
+interface OTIOEffect {
+  name(): string;
+  set_name(name: string): void;
+  effect_name(): string;
+  set_effect_name(name: string): void;
+  to_json_string(): string;
+  dispose(): void;
+}
+
+interface OTIOStack {
+  name(): string;
+  set_name(name: string): void;
+  dispose(): void;
+}
+
 // Extend window interface for OTIO modules
 declare global {
   interface Window {
     Module: {
-      TimeRange: new (start: any, duration: any) => any;
-      RationalTime: new (value: number, rate: number) => any;
-      OTIOTimeRange: new (start: any, duration: any) => any;
-      OTIORationalTime: new (value: number, rate: number) => any;
+      TimeRange: new (start: OpenTimeRationalTime, duration: OpenTimeRationalTime) => OpenTimeRange;
+      RationalTime: new (value: number, rate: number) => OpenTimeRationalTime;
+      OTIOTimeRange: new (start: OTIORationalTime, duration: OTIORationalTime) => OTIOTimeRange;
+      OTIORationalTime: new (value: number, rate: number) => OTIORationalTime;
       get_version(): string;
       test_connection(): boolean;
       create_timeline(name: string): number;
@@ -28,11 +113,11 @@ declare global {
       delete_effect(handle: number): void;
     };
     OTIO: {
-      Timeline: new (name: string, tracks?: any, metadata?: any) => any;
-      Track: new (name: string, kind?: string, children?: any) => any;
-      Clip: new (name: string, media_reference?: any, source_range?: any, metadata?: any) => any;
-      Effect: new (name: string, effect_name?: string, metadata?: any) => any;
-      Stack: new (name: string, children?: any, source_range?: any, metadata?: any) => any;
+      Timeline: new (name: string, tracks?: OTIOTrack[], metadata?: Record<string, unknown>) => OTIOTimeline;
+      Track: new (name: string, kind?: string, children?: OTIOClip[]) => OTIOTrack;
+      Clip: new (name: string, media_reference?: unknown, source_range?: OTIOTimeRange, metadata?: Record<string, unknown>) => OTIOClip;
+      Effect: new (name: string, effect_name?: string, metadata?: Record<string, unknown>) => OTIOEffect;
+      Stack: new (name: string, children?: unknown[], source_range?: OTIOTimeRange, metadata?: Record<string, unknown>) => OTIOStack;
     };
   }
 }
@@ -140,8 +225,6 @@ test.describe('OpenTimelineIO E2E Comprehensive Tests', () => {
     });
   });
 
-
-
   test.describe('Effect System', () => {
     
     test.beforeEach(async ({ page }: { page: Page }) => {
@@ -174,10 +257,12 @@ test.describe('OpenTimelineIO E2E Comprehensive Tests', () => {
           const effects = [];
           for (let i = 0; i < clip.effect_count(); i++) {
             const effect = clip.get_effect(i);
-            effects.push({
-              name: effect.name(),
-              effectName: effect.effect_name()
-            });
+            if (effect) {
+              effects.push({
+                name: effect.name(),
+                effectName: effect.effect_name()
+              });
+            }
           }
           
           // Remove an effect
