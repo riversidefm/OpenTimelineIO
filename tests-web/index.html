@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OpenTimelineIO Test</title>
+</head>
+<body>
+  <div id="status">Loading OpenTimelineIO module...</div>
+  <div id="output"></div>
+
+    <script type="module">
+      // Dynamic import with full error handling
+      try {
+        console.log('Loading module with dynamic import...');
+
+        const OpenTimelineIOModule = await import('./opentimelineio.js');
+        console.log('Dynamic import result:', OpenTimelineIOModule);
+        console.log('Module keys:', Object.keys(OpenTimelineIOModule));
+
+        // Try different export patterns
+        let factoryFunction = null;
+
+        if (typeof OpenTimelineIOModule.default === 'function') {
+          factoryFunction = OpenTimelineIOModule.default;
+          console.log('Using default export as factory');
+        } else if (typeof OpenTimelineIOModule === 'function') {
+          factoryFunction = OpenTimelineIOModule;
+          console.log('Using module itself as factory');
+        } else {
+          // Look for any function in the exports
+          for (const [key, value] of Object.entries(OpenTimelineIOModule)) {
+            if (typeof value === 'function') {
+              console.log(`Found function export: ${key}`);
+              factoryFunction = value;
+              break;
+            }
+          }
+        }
+
+        if (!factoryFunction) {
+          throw new Error('No factory function found in module exports');
+        }
+
+        console.log('Calling factory function...');
+        const Module = await factoryFunction();
+
+        console.log('Module initialized:', Module);
+        console.log('Module keys:', Object.keys(Module));
+        window.OpenTimelineIO = Module;
+
+        // Test functionality
+        if (Module.SerializableObject) {
+          const obj = new Module.SerializableObject();
+          console.log('Created SerializableObject:', obj);
+
+          if (obj.to_json_string) {
+            const json = obj.to_json_string();
+            console.log('JSON output:', json);
+
+            document.getElementById('status').textContent = 'Module loaded successfully!';
+            document.getElementById('output').innerHTML = `
+              <h3>Success!</h3>
+              <p>Module loaded and SerializableObject created.</p>
+              <pre>${json}</pre>
+            `;
+          }
+        } else {
+          console.log('SerializableObject not found in module');
+          document.getElementById('status').textContent = 'Module loaded, but SerializableObject not found';
+        }
+
+      } catch (error) {
+        console.error('Failed to load module:', error);
+        console.error('Error details:', error.message);
+        console.error('Stack trace:', error.stack);
+
+        document.getElementById('status').textContent = 'Failed to load module';
+        document.getElementById('output').innerHTML = `
+          <h3>Error</h3>
+          <p style="color: red;">Error: ${error.message}</p>
+          <p>Check browser console for details.</p>
+        `;
+      }
+    </script>
+
+</body>
+</html>
