@@ -7,6 +7,8 @@
 #include <opentimelineio/serializableObject.h>
 #include <opentimelineio/serializableObjectWithMetadata.h>
 
+#include <Imath/ImathBox.h>
+
 #include "anyDictionaryProxy.h"
 
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
@@ -105,11 +107,17 @@ AnyDictionaryProxyTS get_metadata(otio::SerializableObjectWithMetadata& self) {
     return AnyDictionaryProxyTS(self.metadata().get_or_create_mutation_stamp());
 }
 
+std::optional<IMATH_NAMESPACE::Box2d> get_available_image_bounds(otio::Composable& self) {
+    return self.available_image_bounds(nullptr);
+}
+
 } // anonymous namespace
 
 EMSCRIPTEN_BINDINGS(opentimeline) {
-    // Register map and array types
+    // Register types
     em::register_map<std::string, int64_t>("StringInt64Map");
+    em::register_optional<ot::TimeRange>();
+    em::register_optional<IMATH_NAMESPACE::Box2d>();
 
     // AnyDictionaryProxy bindings
     em::class_<AnyDictionaryProxyTS>("AnyDictionary")
@@ -118,6 +126,19 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .function("get_string", &AnyDictionaryProxyTS::get_string)
         .function("set_bool", &AnyDictionaryProxyTS::set_bool)
         .function("get_bool", &AnyDictionaryProxyTS::get_bool)
+    ;
+
+    // IMath bindings
+    em::class_<IMATH_NAMESPACE::V2d>("V2d")
+        .constructor<double, double>()
+        .property("x", &IMATH_NAMESPACE::V2d::x)
+        .property("y", &IMATH_NAMESPACE::V2d::y)
+    ;
+
+    em::class_<IMATH_NAMESPACE::Box2d>("Box2d")
+        .constructor<IMATH_NAMESPACE::V2d, IMATH_NAMESPACE::V2d>()
+        .property("min", &IMATH_NAMESPACE::Box2d::min)
+        .property("max", &IMATH_NAMESPACE::Box2d::max)
     ;
 
     // OpenTime bindings
@@ -165,6 +186,8 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .smart_ptr_constructor("Composable", &create_composable)
         .function("visible", &otio::Composable::visible)
         .function("overlapping", &otio::Composable::overlapping)
+        .function("parent", &otio::Composable::parent, em::allow_raw_pointers())
+        .function("available_image_bounds", &get_available_image_bounds)
     ;
 
     em::class_<otio::Item, em::base<otio::Composable>>("Item")
@@ -172,6 +195,7 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .property("enabled", &otio::Item::enabled, &otio::Item::set_enabled)
         .function("visible", &otio::Item::visible)
         .function("overlapping", &otio::Item::overlapping)
+        .property("source_range", &otio::Item::source_range, &otio::Item::set_source_range)
     ;
 
     em::class_<otio::Composition, em::base<otio::Item>>("Composition")
