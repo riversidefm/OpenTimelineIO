@@ -2,6 +2,7 @@
 
 #include <opentimelineio/composable.h>
 #include <opentimelineio/composition.h>
+#include <opentimelineio/effect.h>
 #include <opentimelineio/item.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/serializableObject.h>
@@ -116,6 +117,8 @@ std::optional<IMATH_NAMESPACE::Box2d> get_available_image_bounds(otio::Composabl
 EMSCRIPTEN_BINDINGS(opentimeline) {
     // Register types
     em::register_map<std::string, int64_t>("StringInt64Map");
+    em::register_vector<Retainer<otio::Marker>>("VectorMarker");
+    em::register_vector<Retainer<otio::Effect>>("VectorEffect");
     em::register_optional<ot::TimeRange>();
     em::register_optional<IMATH_NAMESPACE::Box2d>();
 
@@ -231,6 +234,7 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .function("visible", &otio::Item::visible)
         .function("overlapping", &otio::Item::overlapping)
         .property("source_range", &otio::Item::source_range, &otio::Item::set_source_range)
+        .function("markers", em::select_overload<std::vector<Retainer<otio::Marker>>& ()>(&otio::Item::markers), em::return_value_policy::reference() )
     ;
 
     em::class_<otio::Composition, em::base<otio::Item>>("Composition")
@@ -242,6 +246,7 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .smart_ptr_constructor("Marker", &create_marker)
         .property("color", &otio::Marker::color, &otio::Marker::set_color)
         .property("comment", &otio::Marker::comment, &otio::Marker::set_comment)
+        .property("marked_range", &otio::Marker::marked_range, &otio::Marker::set_marked_range)
     ;
 }
 
