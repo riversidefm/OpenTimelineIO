@@ -9,8 +9,9 @@
 
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 namespace ot = opentime::OPENTIME_VERSION;
-template<typename T>
+namespace em = emscripten;
 
+template<typename T>
 using Retainer = otio::SerializableObject::Retainer<T>;
 
 namespace emscripten {
@@ -99,43 +100,70 @@ Retainer<otio::Marker> create_marker(std::string const& name = std::string(), st
 
 } // anonymous namespace
 
-EMSCRIPTEN_BINDINGS(opentimelineio) {
-    emscripten::register_map<std::string, int64_t>("StringInt64Map");
+EMSCRIPTEN_BINDINGS(opentimeline) {
+    // Register map and array types
+    em::register_map<std::string, int64_t>("StringInt64Map");
 
-    emscripten::class_<otio::ErrorStatus>("ErrorStatus")
-        .function("outcome_to_string", &otio::ErrorStatus::outcome_to_string, emscripten::allow_raw_pointers())
+    // OpenTime bindings
+
+    em::class_<ot::RationalTime>("RationalTime")
+        .constructor<double, double>()
+        .function("is_invalid_time", &ot::RationalTime::is_invalid_time)
+        .function("is_valid_time", &ot::RationalTime::is_valid_time)
+        .function("value", &ot::RationalTime::value)
+        .function("rate", &ot::RationalTime::rate)
+        .class_function("from_seconds", em::select_overload<ot::RationalTime(double)>(&ot::RationalTime::from_seconds))
+        .class_function("from_seconds_rate", em::select_overload<ot::RationalTime(double, double)>(&ot::RationalTime::from_seconds))
     ;
 
-    emscripten::class_<otio::SerializableObject>("SerializableObject")
+    em::class_<ot::TimeRange>("TimeRange")
+        .constructor<ot::RationalTime>()
+        .constructor<ot::RationalTime, ot::RationalTime>()
+        .constructor<double, double, double>()
+        .function("is_invalid_range", &ot::TimeRange::is_invalid_range)
+        .function("is_valid_range", &ot::TimeRange::is_valid_range)
+        .function("start_time", &ot::TimeRange::start_time)
+        .function("duration", &ot::TimeRange::duration)
+        .function("end_time_inclusive", &ot::TimeRange::end_time_inclusive)
+        .function("end_time_exclusive", &ot::TimeRange::end_time_exclusive)
+    ;
+
+    // OpenTimelineIO bindings
+
+    em::class_<otio::ErrorStatus>("ErrorStatus")
+        .function("outcome_to_string", &otio::ErrorStatus::outcome_to_string, em::allow_raw_pointers())
+    ;
+
+    em::class_<otio::SerializableObject>("SerializableObject")
         .smart_ptr_constructor("SerializableObject", &create_serializable_object)
-        .function("to_json_string", &serializable_object_to_json_string, emscripten::allow_raw_pointers())
-        .class_function("from_json_string", &otio::SerializableObject::from_json_string, emscripten::allow_raw_pointers())
+        .function("to_json_string", &serializable_object_to_json_string, em::allow_raw_pointers())
+        .class_function("from_json_string", &otio::SerializableObject::from_json_string, em::allow_raw_pointers())
     ;
 
-    emscripten::class_<otio::SerializableObjectWithMetadata, emscripten::base<otio::SerializableObject>>("SerializableObjectWithMetadata")
+    em::class_<otio::SerializableObjectWithMetadata, em::base<otio::SerializableObject>>("SerializableObjectWithMetadata")
         .smart_ptr_constructor("SerializableObjectWithMetadata", &create_serializable_object_with_metadata)
         .property("name", &otio::SerializableObjectWithMetadata::name, &otio::SerializableObjectWithMetadata::set_name)
     ;
 
-    emscripten::class_<otio::Composable, emscripten::base<otio::SerializableObjectWithMetadata>>("Composable")
+    em::class_<otio::Composable, em::base<otio::SerializableObjectWithMetadata>>("Composable")
         .smart_ptr_constructor("Composable", &create_composable)
         .function("visible", &otio::Composable::visible)
         .function("overlapping", &otio::Composable::overlapping)
     ;
 
-    emscripten::class_<otio::Item, emscripten::base<otio::Composable>>("Item")
+    em::class_<otio::Item, em::base<otio::Composable>>("Item")
         .smart_ptr_constructor("Item", &create_item)
         .property("enabled", &otio::Item::enabled, &otio::Item::set_enabled)
         .function("visible", &otio::Item::visible)
         .function("overlapping", &otio::Item::overlapping)
     ;
 
-    emscripten::class_<otio::Composition, emscripten::base<otio::Item>>("Composition")
+    em::class_<otio::Composition, em::base<otio::Item>>("Composition")
         .smart_ptr_constructor("Composition", &create_composition)
         .function("composition_kind", &otio::Composition::composition_kind)
     ;
 
-    emscripten::class_<otio::Marker, emscripten::base<otio::SerializableObjectWithMetadata>>("Marker")
+    em::class_<otio::Marker, em::base<otio::SerializableObjectWithMetadata>>("Marker")
         .smart_ptr_constructor("Marker", &create_marker)
         .property("color", &otio::Marker::color, &otio::Marker::set_color)
         .property("comment", &otio::Marker::comment, &otio::Marker::set_comment)
