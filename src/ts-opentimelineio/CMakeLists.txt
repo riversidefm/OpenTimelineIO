@@ -3,7 +3,8 @@ if (NOT EMSCRIPTEN)
 endif()
 
 add_executable(opentimelineio_ts
-    otio_ts_bindings.cpp
+    otio_ts_bindings.cpp otio_ts_bindings.h
+    otio_error_status.cpp
 )
 
 target_link_libraries(opentimelineio_ts PUBLIC opentimelineio opentime)

@@ -1,12 +1,5 @@
 #include <emscripten/bind.h>
-
-#include <opentimelineio/composable.h>
-#include <opentimelineio/composition.h>
-#include <opentimelineio/effect.h>
-#include <opentimelineio/item.h>
-#include <opentimelineio/marker.h>
-#include <opentimelineio/serializableObject.h>
-#include <opentimelineio/serializableObjectWithMetadata.h>
+#include "otio_ts_bindings.h"
 
 #include <Imath/ImathBox.h>
 
@@ -15,62 +8,6 @@
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 namespace ot = opentime::OPENTIME_VERSION;
 namespace em = emscripten;
-
-template<typename T>
-using Retainer = otio::SerializableObject::Retainer<T>;
-
-namespace emscripten {
-
-// All open timeline objects are held within the Retainer<> class, which is a smart pointer.
-template<typename T>
-struct smart_ptr_trait<Retainer<T>> {
-    using pointer_type = Retainer<T>;
-    using element_type = T;
-
-    static T* get(const pointer_type& ptr) {
-        return ptr.value;
-    }
-
-    static sharing_policy get_sharing_policy() {
-        return sharing_policy::INTRUSIVE;
-    }
-
-    static pointer_type share(const pointer_type &r, T *ptr) {
-        return pointer_type(ptr);
-    }
-
-    static pointer_type *construct_null() {
-        return new pointer_type;
-    }
-};
-
-namespace internal {
-
-// All objects should be managed by Retainer<> smart pointers.  Because the destructors are protected,
-// we need to delete the raw_destructor (which shouldn't be called anyway).
-
-template<>
-void raw_destructor<otio::SerializableObject>(otio::SerializableObject* ptr) {}
-
-template<>
-void raw_destructor<otio::SerializableObjectWithMetadata>(otio::SerializableObjectWithMetadata* ptr) {}
-
-template<>
-void raw_destructor<otio::Composable>(otio::Composable* ptr) {}
-
-template<>
-void raw_destructor<otio::Item>(otio::Item* ptr) {}
-
-template<>
-void raw_destructor<otio::Composition>(otio::Composition* ptr) {}
-
-template<>
-void raw_destructor<otio::Marker>(otio::Marker* ptr) {}
-
-
-} // namespace internal
-
-} // namespace emscripten
 
 namespace {
 
@@ -168,45 +105,6 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
     ;
 
     // OpenTimelineIO bindings
-
-    em::class_<otio::ErrorStatus>("ErrorStatus")
-        .constructor()
-        .function("outcome_to_string", &otio::ErrorStatus::outcome_to_string, em::allow_raw_pointers())
-        .property("outcome", &otio::ErrorStatus::outcome)
-        .property("details", &otio::ErrorStatus::details)
-    ;
-
-    em::enum_<otio::ErrorStatus::Outcome>("ErrorStatusOutcome")
-        .value("OK", otio::ErrorStatus::OK)
-        .value("NOT_IMPLEMENTED", otio::ErrorStatus::NOT_IMPLEMENTED)
-        .value("UNRESOLVED_OBJECT_REFERENCE", otio::ErrorStatus::UNRESOLVED_OBJECT_REFERENCE)
-        .value("DUPLICATE_OBJECT_REFERENCE", otio::ErrorStatus::DUPLICATE_OBJECT_REFERENCE)
-        .value("MALFORMED_SCHEMA", otio::ErrorStatus::MALFORMED_SCHEMA)
-        .value("JSON_PARSE_ERROR", otio::ErrorStatus::JSON_PARSE_ERROR)
-        .value("CHILD_ALREADY_PARENTED", otio::ErrorStatus::CHILD_ALREADY_PARENTED)
-        .value("FILE_OPEN_FAILED", otio::ErrorStatus::FILE_OPEN_FAILED)
-        .value("FILE_WRITE_FAILED", otio::ErrorStatus::FILE_WRITE_FAILED)
-        .value("SCHEMA_ALREADY_REGISTERED", otio::ErrorStatus::SCHEMA_ALREADY_REGISTERED)
-        .value("SCHEMA_NOT_REGISTERED", otio::ErrorStatus::SCHEMA_NOT_REGISTERED)
-        .value("SCHEMA_VERSION_UNSUPPORTED", otio::ErrorStatus::SCHEMA_VERSION_UNSUPPORTED)
-        .value("KEY_NOT_FOUND", otio::ErrorStatus::KEY_NOT_FOUND)
-        .value("ILLEGAL_INDEX", otio::ErrorStatus::ILLEGAL_INDEX)
-        .value("TYPE_MISMATCH", otio::ErrorStatus::TYPE_MISMATCH)
-        .value("INTERNAL_ERROR", otio::ErrorStatus::INTERNAL_ERROR)
-        .value("NOT_AN_ITEM", otio::ErrorStatus::NOT_AN_ITEM)
-        .value("NOT_A_CHILD_OF", otio::ErrorStatus::NOT_A_CHILD_OF)
-        .value("NOT_A_CHILD", otio::ErrorStatus::NOT_A_CHILD)
-        .value("NOT_DESCENDED_FROM", otio::ErrorStatus::NOT_DESCENDED_FROM)
-        .value("CANNOT_COMPUTE_AVAILABLE_RANGE", otio::ErrorStatus::CANNOT_COMPUTE_AVAILABLE_RANGE)
-        .value("INVALID_TIME_RANGE", otio::ErrorStatus::INVALID_TIME_RANGE)
-        .value("OBJECT_WITHOUT_DURATION", otio::ErrorStatus::OBJECT_WITHOUT_DURATION)
-        .value("CANNOT_TRIM_TRANSITION", otio::ErrorStatus::CANNOT_TRIM_TRANSITION)
-        .value("OBJECT_CYCLE", otio::ErrorStatus::OBJECT_CYCLE)
-        .value("CANNOT_COMPUTE_BOUNDS", otio::ErrorStatus::CANNOT_COMPUTE_BOUNDS)
-        .value("MEDIA_REFERENCES_DO_NOT_CONTAIN_ACTIVE_KEY", otio::ErrorStatus::MEDIA_REFERENCES_DO_NOT_CONTAIN_ACTIVE_KEY)
-        .value("MEDIA_REFERENCES_CONTAIN_EMPTY_KEY", otio::ErrorStatus::MEDIA_REFERENCES_CONTAIN_EMPTY_KEY)
-        .value("NOT_A_GAP", otio::ErrorStatus::NOT_A_GAP)
-    ;
 
     em::class_<otio::SerializableObject>("SerializableObject")
         .smart_ptr_constructor("SerializableObject", &create_serializable_object)
