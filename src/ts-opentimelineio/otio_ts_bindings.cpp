@@ -7,6 +7,8 @@
 #include <opentimelineio/serializableObject.h>
 #include <opentimelineio/serializableObjectWithMetadata.h>
 
+#include "anyDictionaryProxy.h"
+
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 namespace ot = opentime::OPENTIME_VERSION;
 namespace em = emscripten;
@@ -98,20 +100,33 @@ Retainer<otio::Marker> create_marker(std::string const& name = std::string(), st
     return otio::Marker::Retainer<otio::Marker>(new otio::Marker(name, ot::TimeRange(), color, otio::AnyDictionary(), comment));
 }
 
+// Accessor functions
+AnyDictionaryProxyTS get_metadata(otio::SerializableObjectWithMetadata& self) {
+    return AnyDictionaryProxyTS(self.metadata().get_or_create_mutation_stamp());
+}
+
 } // anonymous namespace
 
 EMSCRIPTEN_BINDINGS(opentimeline) {
     // Register map and array types
     em::register_map<std::string, int64_t>("StringInt64Map");
 
-    // OpenTime bindings
+    // AnyDictionaryProxy bindings
+    em::class_<AnyDictionaryProxyTS>("AnyDictionary")
+        .function("has_key", &AnyDictionaryProxyTS::has_key)
+        .function("set_string", &AnyDictionaryProxyTS::set_string)
+        .function("get_string", &AnyDictionaryProxyTS::get_string)
+        .function("set_bool", &AnyDictionaryProxyTS::set_bool)
+        .function("get_bool", &AnyDictionaryProxyTS::get_bool)
+    ;
 
+    // OpenTime bindings
     em::class_<ot::RationalTime>("RationalTime")
         .constructor<double, double>()
         .function("is_invalid_time", &ot::RationalTime::is_invalid_time)
         .function("is_valid_time", &ot::RationalTime::is_valid_time)
-        .function("value", &ot::RationalTime::value)
-        .function("rate", &ot::RationalTime::rate)
+        .property("value", &ot::RationalTime::value)
+        .property("rate", &ot::RationalTime::rate)
         .class_function("from_seconds", em::select_overload<ot::RationalTime(double)>(&ot::RationalTime::from_seconds))
         .class_function("from_seconds_rate", em::select_overload<ot::RationalTime(double, double)>(&ot::RationalTime::from_seconds))
     ;
@@ -122,10 +137,10 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .constructor<double, double, double>()
         .function("is_invalid_range", &ot::TimeRange::is_invalid_range)
         .function("is_valid_range", &ot::TimeRange::is_valid_range)
-        .function("start_time", &ot::TimeRange::start_time)
-        .function("duration", &ot::TimeRange::duration)
-        .function("end_time_inclusive", &ot::TimeRange::end_time_inclusive)
-        .function("end_time_exclusive", &ot::TimeRange::end_time_exclusive)
+        .property("start_time", &ot::TimeRange::start_time)
+        .property("duration", &ot::TimeRange::duration)
+        .property("end_time_inclusive", &ot::TimeRange::end_time_inclusive)
+        .property("end_time_exclusive", &ot::TimeRange::end_time_exclusive)
     ;
 
     // OpenTimelineIO bindings
@@ -143,6 +158,7 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
     em::class_<otio::SerializableObjectWithMetadata, em::base<otio::SerializableObject>>("SerializableObjectWithMetadata")
         .smart_ptr_constructor("SerializableObjectWithMetadata", &create_serializable_object_with_metadata)
         .property("name", &otio::SerializableObjectWithMetadata::name, &otio::SerializableObjectWithMetadata::set_name)
+        .function("metadata", &get_metadata)
     ;
 
     em::class_<otio::Composable, em::base<otio::SerializableObjectWithMetadata>>("Composable")
