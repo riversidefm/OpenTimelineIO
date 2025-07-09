@@ -1,0 +1,60 @@
+import { Page } from '@playwright/test';
+
+/**
+ * Loads the OpenTimeline module and makes it available on window.OpenTimeline
+ * @param page - The Playwright page object
+ * @returns Promise that resolves when the module is loaded and ready
+ */
+export async function loadOpenTimelineModule(page: Page): Promise<void> {
+  // Navigate to a blank page first
+  await page.goto('http://localhost:8000/', {
+    waitUntil: 'networkidle',
+    timeout: 30000
+  });
+
+  // Load the module script as ES6 module
+  await page.addScriptTag({
+    url: '/build/src/ts-opentimelineio/opentimeline.js',
+    type: 'module'
+  });
+
+  // Initialize the module in the browser context
+  await page.evaluate(async () => {
+    try {
+      // Try to import the module dynamically in the browser
+      const modulePath = '/build/src/ts-opentimelineio/opentimeline.js';
+      const OpenTimelineModule = await import(modulePath);
+
+      console.log('Module imported:', OpenTimelineModule);
+      console.log('Module keys:', Object.keys(OpenTimelineModule));
+
+      // Get the factory function (default export)
+      const factoryFunction = OpenTimelineModule.default;
+
+      if (typeof factoryFunction !== 'function') {
+        throw new Error('Factory function not found in module exports');
+      }
+
+      // Initialize the module
+      const Module = await factoryFunction();
+
+      // Make it available globally
+      (window as any).OpenTimeline = Module;
+
+      console.log('Module loaded successfully in helper');
+    } catch (error) {
+      console.error('Failed to load module in helper:', error);
+      throw error;
+    }
+  });
+
+  // Wait for the module to be fully loaded
+  await page.waitForFunction(
+    () => {
+      const win = window as any;
+      return win.OpenTimeline &&
+             typeof win.OpenTimeline.SerializableObject === 'function';
+    },
+    { timeout: 30000 }
+  );
+}

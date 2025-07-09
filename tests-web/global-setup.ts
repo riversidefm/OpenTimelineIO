@@ -1,13 +1,8 @@
 import { chromium, Browser, Page } from '@playwright/test';
+import { loadOpenTimelineModule } from './helpers/module-loader';
 
 interface ModuleTestResult {
   error?: string;
-}
-
-interface WindowWithModules extends Window {
-  OpenTimelineIO: {
-    SerializableObject: new () => any;
-  };
 }
 
 async function globalSetup(): Promise<void> {
@@ -43,68 +38,16 @@ async function globalSetup(): Promise<void> {
       console.log(`✅ ${moduleUrl} - OK`);
     }
 
-            // Test basic module loading
+    // Test basic module loading
     console.log('🔧 Testing module initialization...');
 
-    // Navigate to a blank page first
-    await page.goto('http://localhost:8000/', {
-      waitUntil: 'networkidle',
-      timeout: 30000
-    });
-
-    // Load the module script as ES6 module
-    await page.addScriptTag({
-      url: '/build/src/ts-opentimelineio/opentimeline.js',
-      type: 'module'
-    });
-
-    // Initialize the module
-    await page.evaluate(async () => {
-      try {
-        // Debug: Check what's available on window
-        console.log('Window keys after loading:', Object.keys(window).filter(k => k.includes('Time')));
-
-        // Try to import the module dynamically
-        const modulePath = '/build/src/ts-opentimelineio/opentimeline.js';
-        const OpenTimelineModule = await import(modulePath);
-
-        console.log('Module imported:', OpenTimelineModule);
-        console.log('Module keys:', Object.keys(OpenTimelineModule));
-
-        // Get the factory function (default export)
-        const factoryFunction = OpenTimelineModule.default;
-
-        if (typeof factoryFunction !== 'function') {
-          throw new Error('Factory function not found in module exports');
-        }
-
-        // Initialize the module
-        const Module = await factoryFunction();
-
-        // Make it available globally
-        (window as any).OpenTimeline = Module;
-
-        console.log('Module loaded successfully in global-setup');
-      } catch (error) {
-        console.error('Failed to load module in global-setup:', error);
-        throw error;
-      }
-    });
-
-    // Wait for the module to be fully loaded and available
-    await page.waitForFunction(
-      () => {
-        const win = window as any;
-        return win.OpenTimeline &&
-               typeof win.OpenTimeline.SerializableObject === 'function';
-      },
-      { timeout: 30000 }
-    );
+    // Use the helper function to load the module
+    await loadOpenTimelineModule(page);
 
     // Test we can create the base of bases, SerializableObject
     const testResult: ModuleTestResult = await page.evaluate(async () => {
       try {
-        const win = window as unknown as WindowWithModules;
+        const win = window as any;
         const OTIO = win.OpenTimeline;
         const obj = new OTIO.SerializableObject();
         return { success: true };
