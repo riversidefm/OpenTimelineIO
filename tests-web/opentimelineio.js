@@ -1,1 +1,0 @@
-../build/src/ts-opentimelineio/opentimelineio-bindings/opentimelineio.js

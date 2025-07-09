@@ -23,3 +23,10 @@ cpp_cov_html/
 lcov_html_report/
 *.so
 *.pyd
+
+# Playwright
+tests-web/node_modules/
+tests-web/test-results/
+tests-web/playwright-report/
+tests-web/blob-report/
+tests-web/playwright/.cache/
