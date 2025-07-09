@@ -64,6 +64,8 @@ void raw_destructor<otio::Composition>(otio::Composition* ptr) {}
 template<>
 void raw_destructor<otio::Marker>(otio::Marker* ptr) {}
 
+template<>
+void raw_destructor<otio::Effect>(otio::Effect* ptr) {}
 
 } // namespace internal
 

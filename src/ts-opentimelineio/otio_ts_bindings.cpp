@@ -40,6 +40,10 @@ Retainer<otio::Marker> create_marker(std::string const& name = std::string(), st
     return otio::Marker::Retainer<otio::Marker>(new otio::Marker(name, ot::TimeRange(), color, otio::AnyDictionary(), comment));
 }
 
+Retainer<otio::Effect> create_effect(std::string const& name = std::string(), std::string const& effect_name = std::string(), bool enabled = true) {
+    return otio::Effect::Retainer<otio::Effect>(new otio::Effect(name, effect_name, otio::AnyDictionary(), enabled));
+}
+
 // Accessor functions
 AnyDictionaryProxyTS get_metadata(otio::SerializableObjectWithMetadata& self) {
     return AnyDictionaryProxyTS(self.metadata().get_or_create_mutation_stamp());
@@ -132,7 +136,8 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .function("visible", &otio::Item::visible)
         .function("overlapping", &otio::Item::overlapping)
         .property("source_range", &otio::Item::source_range, &otio::Item::set_source_range)
-        .function("markers", em::select_overload<std::vector<Retainer<otio::Marker>>& ()>(&otio::Item::markers), em::return_value_policy::reference() )
+        .function("markers", em::select_overload<std::vector<Retainer<otio::Marker>>& ()>(&otio::Item::markers), em::return_value_policy::reference())
+        .function("effects", em::select_overload<std::vector<Retainer<otio::Effect>>& ()>(&otio::Item::effects), em::return_value_policy::reference())
     ;
 
     em::class_<otio::Composition, em::base<otio::Item>>("Composition")
@@ -145,6 +150,12 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .property("color", &otio::Marker::color, &otio::Marker::set_color)
         .property("comment", &otio::Marker::comment, &otio::Marker::set_comment)
         .property("marked_range", &otio::Marker::marked_range, &otio::Marker::set_marked_range)
+    ;
+
+    em::class_<otio::Effect, em::base<otio::SerializableObjectWithMetadata>>("Effect")
+        .smart_ptr_constructor("Effect", &create_effect)
+        .property("effect_name", &otio::Effect::effect_name, &otio::Effect::set_effect_name)
+        .property("enabled", &otio::Effect::enabled, &otio::Effect::set_enabled)
     ;
 }
 
