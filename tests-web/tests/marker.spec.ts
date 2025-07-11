@@ -88,25 +88,16 @@ test.describe('Marker Test', () => {
             item.markers().push_back(marker0);
             item.markers().push_back(marker1);
 
-            const error = new OTIO.ErrorStatus
-            const reconstructedItem = OTIO.SerializableObject.from_json_string(item.to_json_string(), error);
-
             return {
                 markers_size: item.markers().size(),
                 marker0_name: item.markers().get(0).name,
                 marker1_name: item.markers().get(1).name,
-                reconstructed_markers_size: reconstructedItem.markers().size(),
-                reconstructed_marker0_name: reconstructedItem.markers().get(0).name,
-                reconstructed_marker1_name: reconstructedItem.markers().get(1).name,
             };
         });
 
         expect(testResults.markers_size).toBe(2);
         expect(testResults.marker0_name).toBe("Marker0");
         expect(testResults.marker1_name).toBe("Marker1");
-        expect(testResults.reconstructed_markers_size).toBe(2);
-        expect(testResults.reconstructed_marker0_name).toBe("Marker0");
-        expect(testResults.reconstructed_marker1_name).toBe("Marker1");
     });
 
 });

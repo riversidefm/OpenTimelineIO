@@ -29,7 +29,7 @@ test.describe('Item Test', () => {
                 empty_range: empty_range,
                 source_range_start: item.source_range.start_time.value,
                 source_range_duration: item.source_range.duration.value,
-                available_image_bounds: item.available_image_bounds(),
+                available_image_bounds: item.available_image_bounds,
             };
         });
 

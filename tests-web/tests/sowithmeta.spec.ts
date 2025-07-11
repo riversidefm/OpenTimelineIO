@@ -31,12 +31,15 @@ test.describe('SerializableObjectWithMetadata Test', () => {
 
             // Retrieve the metadata again, to make sure it was updated
             const metadata2 = so.metadata();
+            const error = new OTIO.ErrorStatus();
+            const json = so.to_json_string(error);
 
             return {
                 theString: metadata2.get_string("SomeKey"),
                 theBool: metadata2.get_bool("SomeBool"),
                 badKey: metadata2.has_key("BadKey"),
-                json: so.to_json_string()
+                json: json,
+                error_outcome: error.outcome === OTIO.ErrorStatusOutcome.OK,
             };
         });
 
@@ -45,5 +48,6 @@ test.describe('SerializableObjectWithMetadata Test', () => {
         expect(testResults.badKey).toBe(false);
         expect(testResults.json).toContain("\"SomeKey\": \"SomeValue\"");
         expect(testResults.json).toContain("\"SomeBool\": true");
+        expect(testResults.error_outcome).toBe(true);
     });
 });

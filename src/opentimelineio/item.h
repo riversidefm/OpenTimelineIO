@@ -56,12 +56,19 @@ public:
     /// @brief Return the source range of the item.
     std::optional<TimeRange> source_range() const noexcept
     {
+        if (_source_range) {
+            std::cerr << "source_range start:" << _source_range->start_time().value() << std::endl;
+            std::cerr << "source_range duration:" << _source_range->duration().value() << std::endl;
+        } else {
+            std::cerr << "source_range " << (void*)this << " is null" << std::endl;
+        }
         return _source_range;
     }
 
     /// @brief Set the source range of the item.
     void set_source_range(std::optional<TimeRange> const& source_range)
     {
+        std::cerr << "set_source_range " << (void*)this << std::endl;
         _source_range = source_range;
     }
 

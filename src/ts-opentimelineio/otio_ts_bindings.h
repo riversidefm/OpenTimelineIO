@@ -1,13 +1,20 @@
 #pragma once
 #include <emscripten/bind.h>
 
+#include <opentimelineio/clip.h>
 #include <opentimelineio/composable.h>
 #include <opentimelineio/composition.h>
 #include <opentimelineio/effect.h>
+#include <opentimelineio/externalReference.h>
+#include <opentimelineio/gap.h>
 #include <opentimelineio/item.h>
 #include <opentimelineio/marker.h>
+#include <opentimelineio/mediaReference.h>
 #include <opentimelineio/serializableObject.h>
 #include <opentimelineio/serializableObjectWithMetadata.h>
+#include <opentimelineio/stack.h>
+#include <opentimelineio/timeline.h>
+#include <opentimelineio/track.h>
 
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 namespace ot = opentime::OPENTIME_VERSION;
@@ -47,25 +54,46 @@ namespace internal {
 // we need to delete the raw_destructor (which shouldn't be called anyway).
 
 template<>
+void raw_destructor<otio::Clip>(otio::Clip* ptr) {}
+
+template<>
+void raw_destructor<otio::Composable>(otio::Composable* ptr) {}
+
+template<>
+void raw_destructor<otio::Composition>(otio::Composition* ptr) {}
+
+template<>
+void raw_destructor<otio::Effect>(otio::Effect* ptr) {}
+
+template<>
+void raw_destructor<otio::ExternalReference>(otio::ExternalReference* ptr) {}
+
+template<>
+void raw_destructor<otio::Gap>(otio::Gap* ptr) {}
+
+template<>
+void raw_destructor<otio::Item>(otio::Item* ptr) {}
+
+template<>
+void raw_destructor<otio::Marker>(otio::Marker* ptr) {}
+
+template<>
+void raw_destructor<otio::MediaReference>(otio::MediaReference* ptr) {}
+
+template<>
 void raw_destructor<otio::SerializableObject>(otio::SerializableObject* ptr) {}
 
 template<>
 void raw_destructor<otio::SerializableObjectWithMetadata>(otio::SerializableObjectWithMetadata* ptr) {}
 
 template<>
-void raw_destructor<otio::Composable>(otio::Composable* ptr) {}
+void raw_destructor<otio::Stack>(otio::Stack* ptr) {}
 
 template<>
-void raw_destructor<otio::Item>(otio::Item* ptr) {}
+void raw_destructor<otio::Timeline>(otio::Timeline* ptr) {}
 
 template<>
-void raw_destructor<otio::Composition>(otio::Composition* ptr) {}
-
-template<>
-void raw_destructor<otio::Marker>(otio::Marker* ptr) {}
-
-template<>
-void raw_destructor<otio::Effect>(otio::Effect* ptr) {}
+void raw_destructor<otio::Track>(otio::Track* ptr) {}
 
 } // namespace internal
 
