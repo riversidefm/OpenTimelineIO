@@ -16,15 +16,18 @@ export default defineConfig({
   /* Global setup */
   globalSetup: './global-setup.ts',
   /* Run tests in files in parallel - disabled for WASM stability */
-  fullyParallel: false,
+  fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Single worker for WASM module stability */
-  workers: 1,
+  /* 5 workers for tests */
+  workers: 5,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: [
+    ['list'], // Shows detailed output in terminal
+    ['html']  // Keep HTML report for later viewing
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -88,4 +91,4 @@ export default defineConfig({
     stdout: 'pipe',
     stderr: 'pipe',
   },
-}); 
+});
