@@ -302,14 +302,11 @@ TimeRange
 Composition::range_of_child(Composable const* child, ErrorStatus* error_status)
     const
 {
-    std::cerr << "range_of_child" << std::endl;
     auto parents = _path_from_child(child, error_status);
     if (is_error(error_status))
     {
-        std::cerr << "range_of_child 1" << std::endl;
         return TimeRange();
     }
-
 
     Composition const*       reference_space = this; // XXX
     std::optional<TimeRange> result_range;
@@ -321,7 +318,6 @@ Composition::range_of_child(Composable const* child, ErrorStatus* error_status)
         const int index = parent->index_of_child(current, error_status);
         if (is_error(error_status))
         {
-            std::cerr << "range_of_child 2" << std::endl;
             return TimeRange();
         }
 
@@ -329,7 +325,6 @@ Composition::range_of_child(Composable const* child, ErrorStatus* error_status)
             parent->range_of_child_at_index(index, error_status);
         if (is_error(error_status))
         {
-            std::cerr << "range_of_child 3" << std::endl;
             return TimeRange();
         }
 
@@ -346,7 +341,6 @@ Composition::range_of_child(Composable const* child, ErrorStatus* error_status)
         current = parent;
     }
 
-    std::cerr << "range_of_child 4" << std::endl;
     return (reference_space != this) ? transformed_time_range(
                                            *result_range,
                                            reference_space,
@@ -441,10 +435,8 @@ Composition::_children_at_time(RationalTime t, ErrorStatus* error_status) const
 std::optional<TimeRange>
 Composition::trim_child_range(TimeRange child_range) const
 {
-    std::cerr << "trim_child_range" << std::endl;
     if (!source_range())
     {
-        std::cerr << "trim_child_range 1" << std::endl;
         return child_range;
     }
 
@@ -455,13 +447,11 @@ Composition::trim_child_range(TimeRange child_range) const
 
     if (past_end_time || before_start_time)
     {
-        std::cerr << "trim_child_range 2" << std::endl;
         return std::nullopt;
     }
 
     if (child_range.start_time() < sr.start_time())
     {
-        std::cerr << "trim_child_range 3" << std::endl;
         child_range = TimeRange::range_from_start_end_time(
             sr.start_time(),
             child_range.end_time_exclusive());
@@ -469,14 +459,11 @@ Composition::trim_child_range(TimeRange child_range) const
 
     if (child_range.end_time_exclusive() > sr.end_time_exclusive())
     {
-        std::cerr << "trim_child_range 4" << std::endl;
         child_range = TimeRange::range_from_start_end_time(
             child_range.start_time(),
             sr.end_time_exclusive());
     }
 
-    std::cerr << "trim_child_range 5 " << child_range.start_time().value() << std::endl;
-    std::cerr << "trim_child_range 6 " << child_range.end_time_exclusive().value() << std::endl;
     return child_range;
 }
 
