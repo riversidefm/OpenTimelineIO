@@ -17,4 +17,28 @@ target_compile_options(opentimelineio_ts PUBLIC -fwasm-exceptions)
 set_target_properties(opentimelineio_ts PROPERTIES
     LINK_FLAGS "--bind -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='OpenTimelineModule' -s EXPORTED_FUNCTIONS=['_malloc','_free'] -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -sASSERTIONS -fwasm-exceptions"
     OUTPUT_NAME "opentimeline"
-    SUFFIX ".js")
+    SUFFIX ".mjs")
+
+# Generate package.json with correct paths to built files
+set(OPENTIMELINE_PACKAGE_VERSION "1.0.0")
+
+file(GENERATE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/package.json"
+    CONTENT "{
+    \"name\": \"@riversidefm/opentimeline\",
+    \"version\": \"${OPENTIMELINE_PACKAGE_VERSION}\",
+    \"type\": \"module\",
+    \"main\": \"$<TARGET_FILE_NAME:opentimelineio_ts>\",
+    \"files\": [
+        \"$<TARGET_FILE_NAME:opentimelineio_ts>\",
+        \"$<TARGET_FILE_BASE_NAME:opentimelineio_ts>.wasm\"
+    ]
+}")
+
+# Create npm package target
+add_custom_target(opentimelineio_npm_package
+    COMMAND npm pack
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    DEPENDS opentimelineio_ts "${CMAKE_CURRENT_BINARY_DIR}/package.json"
+    COMMENT "Creating npm package for OpenTimelineIO TypeScript bindings"
+)
