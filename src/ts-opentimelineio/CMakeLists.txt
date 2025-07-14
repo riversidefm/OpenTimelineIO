@@ -14,20 +14,8 @@ target_include_directories(opentimelineio_ts
     PRIVATE "${PROJECT_SOURCE_DIR}/src/deps/optional-lite/include"
 )
 target_compile_options(opentimelineio_ts PUBLIC -fwasm-exceptions)
-
-set(LINK_FLAGS
-    "--bind"
-    "-sMODULARIZE=1"
-    "-sEXPORT_ES6=1"
-    "-sEXPORT_NAME='OpenTimelineModule'"
-    "-sEXPORTED_FUNCTIONS=['_malloc','_free']"
-    "-sALLOW_MEMORY_GROWTH=1"
-    "-sWASM=1"
-    "-fwasm-exceptions"
-    "-sEXPORT_EXCEPTION_HANDLING_HELPERS")
-
 set_target_properties(opentimelineio_ts PROPERTIES
-    LINK_FLAGS ${LINK_FLAGS}
+    LINK_FLAGS "--bind -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='OpenTimelineModule' -s EXPORTED_FUNCTIONS=['_malloc','_free'] -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s ASSERTIONS -fwasm-exceptions -s EXPORT_EXCEPTION_HANDLING_HELPERS"
     OUTPUT_NAME "opentimeline"
     SUFFIX ".mjs")
 
