@@ -291,3 +291,7 @@ endif()
 if(OTIO_CXX_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+if(OTIO_TYPESCRIPT_INSTALL)
+    add_subdirectory(tests-web)
+endif()

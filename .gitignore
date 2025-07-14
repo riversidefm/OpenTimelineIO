@@ -30,3 +30,4 @@ tests-web/test-results/
 tests-web/playwright-report/
 tests-web/blob-report/
 tests-web/playwright/.cache/
+tests-web/helpers/module-loader.ts

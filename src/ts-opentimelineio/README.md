@@ -14,7 +14,10 @@ This method uses the Emscripten `emcmake` wrapper:
 # From the top level project directory:
 
 # Configure with emcmake
-emcmake cmake -B build-wasm -S . -DCMAKE_BUILD_TYPE=Release
+emcmake cmake -B build-wasm -S . \
+ -DCMAKE_BUILD_TYPE=Release \
+ -DOTIO_TYPESCRIPT_INSTALL=ON \
+ -DOTIO_SHARED_LIBS=OFF
 
 # Build the TypeScript bindings
 cmake --build build-wasm --target opentimelineio_ts
@@ -33,7 +36,9 @@ This method explicitly specifies the Emscripten toolchain file:
 # Configure with explicit toolchain file
 cmake -B build-wasm -S . \
   -DCMAKE_TOOLCHAIN_FILE=${EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_BUILD_TYPE=Release \
+  -DOTIO_TYPESCRIPT_INSTALL=ON \
+  -DOTIO_SHARED_LIBS=OFF
 
 # Build the TypeScript bindings
 cmake --build build-wasm --target opentimelineio_ts

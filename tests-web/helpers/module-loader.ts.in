@@ -14,7 +14,7 @@ export async function loadOpenTimelineModule(page: Page): Promise<void> {
 
   // Load the module script as ES6 module
   await page.addScriptTag({
-    url: '/build/src/ts-opentimelineio/opentimeline.js',
+    url: '/@CMAKE_BINARY_DIR_RELATIVE@/src/ts-opentimelineio/opentimeline.mjs',
     type: 'module'
   });
 
@@ -22,7 +22,7 @@ export async function loadOpenTimelineModule(page: Page): Promise<void> {
   await page.evaluate(async () => {
     try {
       // Try to import the module dynamically in the browser
-      const modulePath = '/build/src/ts-opentimelineio/opentimeline.js';
+      const modulePath = '/@CMAKE_BINARY_DIR_RELATIVE@/src/ts-opentimelineio/opentimeline.mjs';
       const OpenTimelineModule = await import(modulePath);
 
       console.log('Module imported:', OpenTimelineModule);

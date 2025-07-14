@@ -20,24 +20,6 @@ async function globalSetup(): Promise<void> {
       timeout: 30000
     });
 
-    // Test that WASM modules are accessible
-    console.log('🧪 Testing WASM module accessibility...');
-    const moduleTests: string[] = [
-      '/build/src/ts-opentimelineio/opentimeline.js',
-    ];
-
-    for (const moduleUrl of moduleTests) {
-      const response = await page.goto(`http://localhost:8000${moduleUrl}`, {
-        timeout: 10000
-      });
-
-      if (!response || !response.ok()) {
-        throw new Error(`Failed to load ${moduleUrl}: ${response?.status()}`);
-      }
-
-      console.log(`✅ ${moduleUrl} - OK`);
-    }
-
     // Test basic module loading
     console.log('🔧 Testing module initialization...');
 
