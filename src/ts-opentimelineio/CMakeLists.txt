@@ -7,6 +7,8 @@ add_executable(opentimelineio_ts
     otio_ts_bindings.cpp otio_ts_bindings.h
 )
 
+set(OUTPUT_NAME "opentimeline")
+
 target_link_libraries(opentimelineio_ts PUBLIC opentimelineio opentime)
 target_include_directories(opentimelineio_ts
     PRIVATE "${PROJECT_SOURCE_DIR}/src"
@@ -15,9 +17,22 @@ target_include_directories(opentimelineio_ts
 )
 target_compile_options(opentimelineio_ts PUBLIC -fwasm-exceptions)
 set_target_properties(opentimelineio_ts PROPERTIES
-    LINK_FLAGS "--bind --emit-tsd opentimeline.d.ts -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='OpenTimelineModule' -s EXPORTED_FUNCTIONS=['_malloc','_free'] -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s ASSERTIONS -fwasm-exceptions -s EXPORT_EXCEPTION_HANDLING_HELPERS"
-    OUTPUT_NAME "opentimeline"
+    OUTPUT_NAME ${OUTPUT_NAME}
     SUFFIX ".mjs")
+
+target_link_options(opentimelineio_ts PRIVATE
+    --bind
+    --emit-tsd ${OUTPUT_NAME}.d.ts
+    -sMODULARIZE=1
+    -sEXPORT_ES6=1
+    -sEXPORT_NAME='OpenTimelineModule'
+    -sEXPORTED_FUNCTIONS=['_malloc','_free']
+    -sALLOW_MEMORY_GROWTH=1
+    -sWASM=1
+    -sASSERTIONS
+    -fwasm-exceptions
+    -sEXPORT_EXCEPTION_HANDLING_HELPERS
+    -sWASM_BIGINT)
 
 # Generate package.json with correct paths to built files
 set(OPENTIMELINE_PACKAGE_VERSION "1.0.0")
