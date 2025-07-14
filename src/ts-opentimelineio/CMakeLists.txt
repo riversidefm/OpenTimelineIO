@@ -15,7 +15,7 @@ target_include_directories(opentimelineio_ts
 )
 target_compile_options(opentimelineio_ts PUBLIC -fwasm-exceptions)
 set_target_properties(opentimelineio_ts PROPERTIES
-    LINK_FLAGS "--bind -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='OpenTimelineModule' -s EXPORTED_FUNCTIONS=['_malloc','_free'] -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s ASSERTIONS -fwasm-exceptions -s EXPORT_EXCEPTION_HANDLING_HELPERS"
+    LINK_FLAGS "--bind --emit-tsd opentimeline.d.ts -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='OpenTimelineModule' -s EXPORTED_FUNCTIONS=['_malloc','_free'] -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s ASSERTIONS -fwasm-exceptions -s EXPORT_EXCEPTION_HANDLING_HELPERS"
     OUTPUT_NAME "opentimeline"
     SUFFIX ".mjs")
 
@@ -31,7 +31,8 @@ file(GENERATE
     \"main\": \"$<TARGET_FILE_NAME:opentimelineio_ts>\",
     \"files\": [
         \"$<TARGET_FILE_NAME:opentimelineio_ts>\",
-        \"$<TARGET_FILE_BASE_NAME:opentimelineio_ts>.wasm\"
+        \"$<TARGET_FILE_BASE_NAME:opentimelineio_ts>.wasm\",
+        \"$<TARGET_FILE_BASE_NAME:opentimelineio_ts>.d.ts\"
     ]
 }")
 

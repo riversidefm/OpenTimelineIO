@@ -8,7 +8,7 @@ EMSCRIPTEN_BINDINGS(otio_error_status) {
 
     em::class_<otio::ErrorStatus>("ErrorStatus")
         .constructor()
-        .function("outcome_to_string", &otio::ErrorStatus::outcome_to_string, em::allow_raw_pointers())
+        .class_function("outcome_to_string", &otio::ErrorStatus::outcome_to_string, em::allow_raw_pointers())
         .property("outcome", &otio::ErrorStatus::outcome)
         .property("details", &otio::ErrorStatus::details)
     ;

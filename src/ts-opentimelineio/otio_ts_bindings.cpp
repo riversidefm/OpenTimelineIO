@@ -18,11 +18,16 @@ using Neighbors = std::pair<Retainer<otio::Composable>, Retainer<otio::Composabl
 EMSCRIPTEN_BINDINGS(opentimeline) {
     // Register types
     em::register_map<std::string, int64_t>("MapStringInt64");
+    em::register_vector<Retainer<otio::Clip>>("VectorClip");
     em::register_vector<Retainer<otio::Composable>>("VectorComposable");
     em::register_vector<Retainer<otio::Effect>>("VectorEffect");
+    em::register_vector<Retainer<otio::Gap>>("VectorGap");
+    em::register_vector<Retainer<otio::Item>>("VectorItem");
     em::register_vector<Retainer<otio::Marker>>("VectorMarker");
     em::register_vector<Retainer<otio::Track>>("VectorTrack");
+    em::register_vector<std::string>("VectorString");
     em::register_optional<IMATH_NAMESPACE::Box2d>();
+    em::register_optional<IMATH_NAMESPACE::V2d>();
     em::register_optional<ot::RationalTime>();
     em::register_optional<ot::TimeRange>();
 
