@@ -8,7 +8,7 @@ test.describe('Marker Test', () => {
 
     test('Can construct Marker', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const marker = new OTIO.Marker("Marker0", "green", "A green comment");
             return {
                 name: marker.name,
@@ -24,7 +24,7 @@ test.describe('Marker Test', () => {
 
     test('Can set and get marker color', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const marker = new OTIO.Marker("Marker0", "green", "A green comment");
             marker.color = "red";
             return {
@@ -37,7 +37,7 @@ test.describe('Marker Test', () => {
 
     test('Can set and get marker comment', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const marker = new OTIO.Marker("Marker0", "green", "A green comment");
             marker.comment = "A red comment";
             return {
@@ -50,12 +50,12 @@ test.describe('Marker Test', () => {
 
     test('Can set and get marker range', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const marker = new OTIO.Marker("Marker0", "green", "A green comment");
-            marker.range = new OTIO.TimeRange(10, 20, 1);
+            marker.marked_range = new OTIO.TimeRange(10, 20, 1);
             return {
-                range_start: marker.range.start_time.value,
-                range_duration: marker.range.duration.value,
+                range_start: marker.marked_range?.start_time.value,
+                range_duration: marker.marked_range?.duration.value,
             };
         });
 
@@ -65,7 +65,7 @@ test.describe('Marker Test', () => {
 
     test('Can access markers vector in item', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const item = new OTIO.Item("AnItem");
             return {
                 markers_size: item.markers().size(),
@@ -77,7 +77,7 @@ test.describe('Marker Test', () => {
 
     test('Can add markers to an item', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const item = new OTIO.Item("AnItem");
             const marker0 = new OTIO.Marker("Marker0", "green", "A green comment");
             const marker1 = new OTIO.Marker("Marker1", "red", "A red comment");
@@ -90,8 +90,8 @@ test.describe('Marker Test', () => {
 
             return {
                 markers_size: item.markers().size(),
-                marker0_name: item.markers().get(0).name,
-                marker1_name: item.markers().get(1).name,
+                marker0_name: item.markers().get(0)?.name,
+                marker1_name: item.markers().get(1)?.name,
             };
         });
 

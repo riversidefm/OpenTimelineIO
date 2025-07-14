@@ -8,7 +8,7 @@ test.describe('Clip Tests', () => {
 
     test('Can construct Clip', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const clip = new OTIO.Clip("Clip0");
             return {
                 name: clip.name,
@@ -20,7 +20,7 @@ test.describe('Clip Tests', () => {
 
     test('Can set and get media_reference', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const clip = new OTIO.Clip("Clip0");
             const media_reference = new OTIO.MediaReference("MediaReference0");
             clip.media_reference = media_reference;
@@ -37,14 +37,14 @@ test.describe('Clip Tests', () => {
 
     test('Clip inherits available_range from MediaReference', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const clip = new OTIO.Clip("Clip0");
             const media_reference = new OTIO.MediaReference("MediaReference0");
             media_reference.available_range = new OTIO.TimeRange(0, 100, 1);
             clip.media_reference = media_reference;
             return {
-                av_start_time: clip.available_range.start_time.to_time_string(),
-                av_duration: clip.available_range.duration.to_time_string(),
+                av_start_time: clip.available_range?.start_time.to_time_string(),
+                av_duration: clip.available_range?.duration.to_time_string(),
             };
         });
 
@@ -54,16 +54,16 @@ test.describe('Clip Tests', () => {
 
     test('Clip inherits available_image_bounds from MediaReference', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const clip = new OTIO.Clip("Clip0");
             const media_reference = new OTIO.MediaReference("MediaReference0");
             media_reference.available_image_bounds = new OTIO.Box2d(new OTIO.V2d(0, 1), new OTIO.V2d(100, 102));
             clip.media_reference = media_reference;
             return {
-                av_image_bounds_min_x: clip.available_image_bounds.min.x,
-                av_image_bounds_min_y: clip.available_image_bounds.min.y,
-                av_image_bounds_max_x: clip.available_image_bounds.max.x,
-                av_image_bounds_max_y: clip.available_image_bounds.max.y,
+                av_image_bounds_min_x: clip.available_image_bounds?.min.x,
+                av_image_bounds_min_y: clip.available_image_bounds?.min.y,
+                av_image_bounds_max_x: clip.available_image_bounds?.max.x,
+                av_image_bounds_max_y: clip.available_image_bounds?.max.y,
             };
         });
 

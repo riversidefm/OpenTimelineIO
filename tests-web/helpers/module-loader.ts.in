@@ -1,5 +1,14 @@
 import { Page } from '@playwright/test';
 
+import type { MainModule } from '../types/opentimeline';
+
+// Declare the global window interface with proper OpenTimeline typing
+declare global {
+  interface Window {
+    OpenTimeline: MainModule;
+  }
+}
+
 /**
  * Loads the OpenTimeline module and makes it available on window.OpenTimeline
  * @param page - The Playwright page object

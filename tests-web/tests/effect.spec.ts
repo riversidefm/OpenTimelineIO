@@ -8,7 +8,7 @@ test.describe('Effect Test', () => {
 
     test('Can construct Effect', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const effect = new OTIO.Effect("Effect0", "Blur", true);
             return {
                 name: effect.name,
@@ -24,7 +24,7 @@ test.describe('Effect Test', () => {
 
     test('Can set and get effect_name', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const effect = new OTIO.Effect("Effect0", "Blur", true);
             effect.effect_name = "ColorCorrection";
             return {
@@ -37,7 +37,7 @@ test.describe('Effect Test', () => {
 
     test('Can set and get enabled', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const effect = new OTIO.Effect("Effect0", "Blur", true);
             effect.enabled = false;
             return {
@@ -50,13 +50,13 @@ test.describe('Effect Test', () => {
 
     test('Can add effects to an item', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const item = new OTIO.Item("Item0");
             const effect = new OTIO.Effect("Effect0", "Blur", true);
             item.effects().push_back(effect);
             return {
                 effects_size: item.effects().size(),
-                effect0_name: item.effects().get(0).name,
+                effect0_name: item.effects().get(0)?.name,
             };
         });
 

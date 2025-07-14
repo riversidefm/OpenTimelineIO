@@ -8,7 +8,7 @@ test.describe('Item Test', () => {
 
     test('Can construct Item', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const item = new OTIO.Item("AnItem");
             return {
                 name: item.name,
@@ -20,7 +20,7 @@ test.describe('Item Test', () => {
 
     test('Can set and get source range', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const item = new OTIO.Item("AnItem");
             const empty_range = item.source_range;
             item.source_range = new OTIO.TimeRange(5, 10, 1);

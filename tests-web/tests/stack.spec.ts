@@ -8,7 +8,7 @@ test.describe('Stack Tests', () => {
 
     test('Can construct Stack', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const stack = new OTIO.Stack("Stack0");
             return {
                 name: stack.name,
@@ -20,7 +20,7 @@ test.describe('Stack Tests', () => {
 
     test('range_of_child_at_index(): Errors with bad index', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const stack = new OTIO.Stack("Stack0");
             const error_status = new OTIO.ErrorStatus();
             const range = stack.range_of_child_at_index(1, error_status);
@@ -36,7 +36,7 @@ test.describe('Stack Tests', () => {
 
     test('trimmed_range_of_child_at_index(): Errors with bad index', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const stack = new OTIO.Stack("Stack0");
             const error_status = new OTIO.ErrorStatus();
             const range = stack.trimmed_range_of_child_at_index(1, error_status);
@@ -52,12 +52,12 @@ test.describe('Stack Tests', () => {
 
     test('available_range(): Returns empty time range for empty stack', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const stack = new OTIO.Stack("Stack0");
             return {
                 name: stack.name,
-                range: stack.available_range.start_time.to_time_string(),
-                duration: stack.available_range.duration.to_time_string(),
+                range: stack.available_range?.start_time.to_time_string(),
+                duration: stack.available_range?.duration.to_time_string(),
             };
         });
 

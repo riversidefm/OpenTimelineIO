@@ -12,7 +12,7 @@ test.describe('AnyDictionary Tests', () => {
 
     test('Can set and get string value', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             dict.set_string("foo", "bar");
@@ -28,7 +28,7 @@ test.describe('AnyDictionary Tests', () => {
 
     test('Can set and get boolean value', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             dict.set_bool("foo", true);
@@ -40,7 +40,7 @@ test.describe('AnyDictionary Tests', () => {
 
     test('Can check if key exists with has_key', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             dict.set_string("foo", "bar");
@@ -55,7 +55,7 @@ test.describe('AnyDictionary Tests', () => {
 
     test('get_string throws error for missing key', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             var error = "Missing error"
@@ -72,12 +72,12 @@ test.describe('AnyDictionary Tests', () => {
 
     test('bad cast throws error', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             dict.set_string("foo", "bar");
             try {
-                const badCast = dict.get_bool("foo") as number;
+                const badCast = dict.get_bool("foo");
                 return "no error:"
             } catch (e) {
                 return OTIO.getExceptionMessage(e).toString();
@@ -88,7 +88,7 @@ test.describe('AnyDictionary Tests', () => {
 
     test('Can set and get number value', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             dict.set_number("foo", 1.23);
@@ -99,7 +99,7 @@ test.describe('AnyDictionary Tests', () => {
 
     test('Can set and get integer value', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             dict.set_integer("foo", 123n);
@@ -110,7 +110,7 @@ test.describe('AnyDictionary Tests', () => {
 
     test('Dictionary can be serialized', async ({ page }: { page: Page }) => {
         const result = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const SO = new OTIO.SerializableObjectWithMetadata("dummy");
             const dict = SO.metadata();
             dict.set_string("aString", "bar");

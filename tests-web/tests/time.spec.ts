@@ -8,7 +8,7 @@ test.describe('Time Types Test', () => {
 
     test('Can construct RationalTime', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const time1 = new OTIO.RationalTime(24, 25);
             const time2 = new OTIO.RationalTime(12, 25);
             const time3 = OTIO.RationalTime.from_seconds(1.5);
@@ -38,7 +38,7 @@ test.describe('Time Types Test', () => {
 
     test('Can construct TimeRange', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const timeRange1 = new OTIO.TimeRange(new OTIO.RationalTime(1, 25));
             const timeRange2 = new OTIO.TimeRange(new OTIO.RationalTime(2, 25), new OTIO.RationalTime(3, 25));
             const timeRange3 = new OTIO.TimeRange(0, 10, 25);

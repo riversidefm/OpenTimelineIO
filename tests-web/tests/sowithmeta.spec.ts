@@ -8,7 +8,7 @@ test.describe('SerializableObjectWithMetadata Test', () => {
 
     test('Can construct SerializableObjectWithMetadata', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const so = new OTIO.SerializableObjectWithMetadata("SomeName");
             return {
                 name: so.name,
@@ -20,7 +20,7 @@ test.describe('SerializableObjectWithMetadata Test', () => {
 
     test('Can set and get metadata', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const so = new OTIO.SerializableObjectWithMetadata("ANewObject");
 
             // Manipulate the metadata

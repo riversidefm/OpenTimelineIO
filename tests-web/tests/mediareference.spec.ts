@@ -8,7 +8,7 @@ test.describe('MediaReference Tests', () => {
 
     test('Can create MediaReference', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const media_reference = new OTIO.MediaReference("MediaReference0");
             return {
                 name: media_reference.name,
@@ -20,7 +20,7 @@ test.describe('MediaReference Tests', () => {
 
     test('Can set timerange', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const media_reference = new OTIO.MediaReference("MediaReference0");
             media_reference.available_range = new OTIO.TimeRange(0, 100, 1);
             return {
@@ -35,7 +35,7 @@ test.describe('MediaReference Tests', () => {
 
     test('Can set available_image_bounds', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const media_reference = new OTIO.MediaReference("MediaReference0");
             media_reference.available_image_bounds = new OTIO.Box2d(new OTIO.V2d(0, 1), new OTIO.V2d(100, 102));
             return {

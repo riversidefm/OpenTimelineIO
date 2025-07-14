@@ -31,3 +31,4 @@ tests-web/playwright-report/
 tests-web/blob-report/
 tests-web/playwright/.cache/
 tests-web/helpers/module-loader.ts
+tests-web/types/

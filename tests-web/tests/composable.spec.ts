@@ -8,7 +8,7 @@ test.describe('Composable Test', () => {
 
     test('Can construct Composable', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const composable = new OTIO.Composable("Composable0");
             return {
                 name: composable.name,
@@ -20,19 +20,19 @@ test.describe('Composable Test', () => {
 
     test('available_image_bounds(): Returns undefined for empty composable', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const composable = new OTIO.Composable("Composable0");
             return {
                 bounds: composable.available_image_bounds,
             };
         });
 
-        expect(testResults.bounds).toBe(undefined);
+        expect(testResults.bounds).toBeUndefined();
     });
 
     test('duration(): Returns undefined for empty composable', async ({ page }: { page: Page }) => {
         const testResults = await page.evaluate(() => {
-            const OTIO = (window as any).OpenTimeline;
+            const OTIO = window.OpenTimeline;
             const composable = new OTIO.Composable("Composable0");
             return {
                 duration: composable.duration,
