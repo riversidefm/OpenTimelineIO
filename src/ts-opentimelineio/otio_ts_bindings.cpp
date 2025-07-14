@@ -40,7 +40,11 @@ EMSCRIPTEN_BINDINGS(opentimeline) {
         .function("set_string", &AnyDictionaryProxyTS::set_string)
         .function("get_string", &AnyDictionaryProxyTS::get_string)
         .function("set_bool", &AnyDictionaryProxyTS::set_bool)
-        .function("get_bool", &AnyDictionaryProxyTS::get_bool);
+        .function("get_bool", &AnyDictionaryProxyTS::get_bool)
+        .function("set_number", &AnyDictionaryProxyTS::set_number)
+        .function("get_number", &AnyDictionaryProxyTS::get_number)
+        .function("set_integer", &AnyDictionaryProxyTS::set_integer)
+        .function("get_integer", &AnyDictionaryProxyTS::get_integer);
 
     // IMath bindings
     em::class_<IMATH_NAMESPACE::V2d>("V2d")

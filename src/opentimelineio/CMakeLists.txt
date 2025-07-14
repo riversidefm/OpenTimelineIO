@@ -40,7 +40,7 @@ set(OPENTIMELINEIO_HEADER_FILES
     version.h
     volumeEffects.h)
 
-add_library(opentimelineio ${OTIO_SHARED_OR_STATIC_LIB} 
+add_library(opentimelineio ${OTIO_SHARED_OR_STATIC_LIB}
     clip.cpp
     composable.cpp
     composition.cpp
@@ -93,7 +93,7 @@ else()
 endif()
 
 
-target_link_libraries(opentimelineio 
+target_link_libraries(opentimelineio
     PUBLIC opentime Imath::Imath)
 
 set_target_properties(opentimelineio PROPERTIES
@@ -109,7 +109,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 if(APPLE)
-    set_target_properties(opentimelineio PROPERTIES 
+    set_target_properties(opentimelineio PROPERTIES
         INSTALL_NAME_DIR "@loader_path"
         MACOSX_RPATH ON)
 endif()
@@ -122,8 +122,13 @@ target_compile_options(opentimelineio PRIVATE
      $<$<CXX_COMPILER_ID:MSVC>: /EHsc>
 )
 
+if (EMSCRIPTEN)
+    target_compile_options(opentimelineio PUBLIC -fwasm-exceptions)
+    target_link_options(opentimelineio PUBLIC -fwasm-exceptions -sEXPORT_EXCEPTION_HANDLING_HELPERS)
+endif()
+
 if(OTIO_CXX_INSTALL)
-    install(FILES ${OPENTIMELINEIO_HEADER_FILES} 
+    install(FILES ${OPENTIMELINEIO_HEADER_FILES}
             DESTINATION "${OTIO_RESOLVED_CXX_INSTALL_DIR}/include/opentimelineio")
 
     set(OPENTIMELINEIO_INCLUDES ${OTIO_RESOLVED_CXX_INSTALL_DIR}/include)
