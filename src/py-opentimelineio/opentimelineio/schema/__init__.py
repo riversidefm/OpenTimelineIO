@@ -28,6 +28,7 @@ from .. _otio import (
     V2d,
     VideoCrop,
     VideoFlip,
+    VideoMask,
     VideoPosition,
     VideoRotate,
     VideoScale,
@@ -35,6 +36,7 @@ from .. _otio import (
 )
 
 MarkerColor = Marker.Color
+MaskType = VideoMask.MaskType
 TrackKind = Track.Kind
 TransitionTypes = Transition.Type
 NeighborGapPolicy = Track.NeighborGapPolicy
