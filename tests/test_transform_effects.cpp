@@ -90,7 +90,7 @@ main(int argc, char** argv)
                     {
                         "OTIO_SCHEMA": "VideoMask.1",
                         "name": "mask",
-                        "mask_type": "remove",
+                        "mask_type": "REMOVE",
                         "mask_url": "mask_url",
                         "effect_name": "VideoMaskRemove",
                         "enabled": true
@@ -98,7 +98,7 @@ main(int argc, char** argv)
                     {
                         "OTIO_SCHEMA": "VideoMask.1",
                         "name": "mask",
-                        "mask_type": "replace",
+                        "mask_type": "REPLACE",
                         "mask_url": "mask_url",
                         "effect_name": "VideoMaskReplace",
                         "mask_replacement_url": "mask_replacement_url",
@@ -107,7 +107,7 @@ main(int argc, char** argv)
                     {
                         "OTIO_SCHEMA": "VideoMask.1",
                         "name": "mask",
-                        "mask_type": "blur",
+                        "mask_type": "BLUR",
                         "mask_url": "mask_url",
                         "effect_name": "VideoMaskBlur",
                         "blur_radius": 10.1,
@@ -259,7 +259,7 @@ main(int argc, char** argv)
             "name": "mask",
             "effect_name": "VideoMask",
             "enabled": true,
-            "mask_type": "remove",
+            "mask_type": "REMOVE",
             "mask_url": "mask_url"
         }
     ],

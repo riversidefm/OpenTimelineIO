@@ -81,15 +81,8 @@ void VideoFlip::write_to(Writer &writer) const {
 
 bool VideoMask::read_from(Reader &reader)
 {
-    std::string type;
-    if (!reader.read("mask_type", &type)) {
-        return false;
-    }
-
-    std::transform(type.begin(), type.end(), type.begin(),
-        [](unsigned char c){ return std::tolower(c); });
-
-    bool result =reader.read("mask_url", &_mask_url)
+    bool result = reader.read("mask_type", &_mask_type)
+           && reader.read("mask_url", &_mask_url)
            && reader.read_if_present("mask_replacement_url", &_mask_replacement_url)
            && reader.read_if_present("blur_radius", &_blur_radius)
            && Parent::read_from(reader);
