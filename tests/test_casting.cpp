@@ -17,6 +17,11 @@ main(int argc, char** argv)
         assertTrue(clip2);
         otio::SerializableObject::Retainer<otio::Track> track = otio::dynamic_retainer_cast<otio::Track>(clip);
         assertFalse(track);
+
+        otio::Clip* clip3 = otio::schema_cast<otio::Clip>(clip.value);
+        assertTrue(clip3);
+        otio::Track* track2 = otio::schema_cast<otio::Track>(clip.value);
+        assertFalse(track2);
     });
     tests.run(argc, argv);
 }

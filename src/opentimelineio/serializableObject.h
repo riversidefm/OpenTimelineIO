@@ -747,4 +747,13 @@ schema_retainer_cast(SerializableObject::Retainer<U> const& retainer)
     return nullptr;
 }
 
+template <class T, class U>
+T* schema_cast(U* u)
+{
+    if (u->schema_name() == T::Schema::name) {
+        return static_cast<T*>(u);
+    }
+    return nullptr;
+}
+
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION
