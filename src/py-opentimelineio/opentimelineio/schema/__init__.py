@@ -92,5 +92,6 @@ __all__ = [
     'VideoMask',
     'VideoPosition',
     'VideoRotate',
+    'VideoRoundCorners',
     'VideoScale',
 ]
