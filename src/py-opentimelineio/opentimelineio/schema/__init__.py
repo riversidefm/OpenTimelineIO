@@ -88,6 +88,8 @@ __all__ = [
     'timeline_from_clips',
     'V2d',
     'VideoCrop',
+    'VideoFlip',
+    'VideoMask',
     'VideoPosition',
     'VideoRotate',
     'VideoScale',
