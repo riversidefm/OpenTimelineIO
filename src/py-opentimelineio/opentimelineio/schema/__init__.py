@@ -31,8 +31,8 @@ from .. _otio import (
     VideoMask,
     VideoPosition,
     VideoRotate,
-    VideoScale,
     VideoRoundCorners,
+    VideoScale,
 )
 
 MarkerColor = Marker.Color

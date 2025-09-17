@@ -108,10 +108,10 @@ void VideoMask::write_to(Writer &writer) const {
     writer.write("mask_type", _mask_type);
     writer.write("mask_url", _mask_url);
     if (_mask_replacement_url) {
-        writer.write("mask_replacement_url", _mask_replacement_url);
+        writer.write("mask_replacement_url", _mask_replacement_url.value());
     }
     if (_blur_radius) {
-        writer.write("blur_radius", _blur_radius);
+        writer.write("blur_radius", _blur_radius.value());
     }
 }
 
