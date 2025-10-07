@@ -4,6 +4,8 @@
 #include "opentimelineio/timeline.h"
 #include "opentimelineio/clip.h"
 
+#include <stack>
+
 namespace opentimelineio { namespace OPENTIMELINEIO_VERSION {
 
 Timeline::Timeline(
