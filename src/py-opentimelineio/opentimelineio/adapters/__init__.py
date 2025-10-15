@@ -29,12 +29,14 @@ from .adapter import Adapter  # noqa
 from . import (  # noqa: F401
     otio_json,  # core JSON adapter
     file_bundle_utils,  # utilities for working with OTIO file bundles
+    ffprobe_utils,  # ffprobe utilities with caching for media queries
 )
 
 __all__ = [
     'Adapter',
     'otio_json',
     'file_bundle_utils',
+    'ffprobe_utils',
     'suffixes_with_defined_adapters',
     'available_adapter_names',
     'from_filepath',

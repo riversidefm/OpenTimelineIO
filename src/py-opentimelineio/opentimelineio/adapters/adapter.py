@@ -18,6 +18,7 @@ from .. import (
     media_linker,
     hooks,
 )
+from . import ffprobe_utils
 
 
 @core.register_type
@@ -366,6 +367,104 @@ class Adapter(plugins.PythonPlugin):
                 features["hooks"] = adapter_hooks_names_fn()
 
         return result
+
+    # FFProbe helper methods for use by adapter implementations
+    # Essential media property queries with automatic caching
+
+    @staticmethod
+    def ffprobe_get_duration(filepath, use_cache=True):
+        """Get the duration of a media file in seconds.
+
+        Args:
+            filepath: Path to the media file
+            use_cache: If True, use cached results if available
+
+        Returns:
+            Duration in seconds as a float, or None if not available
+        """
+        return ffprobe_utils.get_duration(filepath, use_cache=use_cache)
+
+    @staticmethod
+    def ffprobe_get_width(filepath, use_cache=True):
+        """Get the width of a video file in pixels.
+
+        Args:
+            filepath: Path to the media file
+            use_cache: If True, use cached results if available
+
+        Returns:
+            Width in pixels as an integer, or None if not available
+        """
+        return ffprobe_utils.get_width(filepath, use_cache=use_cache)
+
+    @staticmethod
+    def ffprobe_get_height(filepath, use_cache=True):
+        """Get the height of a video file in pixels.
+
+        Args:
+            filepath: Path to the media file
+            use_cache: If True, use cached results if available
+
+        Returns:
+            Height in pixels as an integer, or None if not available
+        """
+        return ffprobe_utils.get_height(filepath, use_cache=use_cache)
+
+    @staticmethod
+    def ffprobe_get_framerate(filepath, use_cache=True):
+        """Get the framerate of a video file.
+
+        Args:
+            filepath: Path to the media file
+            use_cache: If True, use cached results if available
+
+        Returns:
+            Framerate as a float (e.g., 24.0, 29.97), or None if not available
+        """
+        return ffprobe_utils.get_framerate(filepath, use_cache=use_cache)
+
+    @staticmethod
+    def ffprobe_get_samplerate(filepath, use_cache=True):
+        """Get the audio sample rate of a media file.
+
+        Args:
+            filepath: Path to the media file
+            use_cache: If True, use cached results if available
+
+        Returns:
+            Sample rate in Hz as an integer (e.g., 48000, 44100), or None if not available
+        """
+        return ffprobe_utils.get_samplerate(filepath, use_cache=use_cache)
+
+    @staticmethod
+    def ffprobe_get_channels(filepath, use_cache=True):
+        """Get the number of audio channels in a media file.
+
+        Args:
+            filepath: Path to the media file
+            use_cache: If True, use cached results if available
+
+        Returns:
+            Number of audio channels as an integer (e.g., 1, 2, 6), or None if not available
+        """
+        return ffprobe_utils.get_channels(filepath, use_cache=use_cache)
+
+    @staticmethod
+    def ffprobe_verify_installed():
+        """Check if ffprobe is available in the system.
+
+        Returns:
+            bool: True if ffprobe is available, False otherwise
+        """
+        return ffprobe_utils.verify_ffprobe_installed()
+
+    @staticmethod
+    def ffprobe_clear_cache():
+        """Clear the ffprobe cache.
+
+        Useful when media files have been modified.
+        """
+        ffprobe_utils.clear_cache()
 
 
 def _with_linked_media_references(
