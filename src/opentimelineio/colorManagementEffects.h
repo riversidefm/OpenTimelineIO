@@ -62,7 +62,7 @@ protected:
     bool read_from(Reader&) override;
     void write_to(Writer&) const override;
 
-    int64_t _contrast;
+    double _contrast;
 };
 
 /// @brief A saturation effect
