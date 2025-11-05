@@ -328,4 +328,67 @@ protected:
     std::optional<double> _blur_radius;
 };
 
+class VideoAnimation : public Effect
+{
+public:
+    struct AnimationType
+    {
+        static auto constexpr no_animation    = 'NO_ANIMATION';
+        static auto constexpr slide_left_in   = 'SLIDE_LEFT_IN';
+        static auto constexpr slide_right_in  = 'SLIDE_RIGHT_IN';
+        static auto constexpr slide_top_in    = 'SLIDE_TOP_IN';
+        static auto constexpr slide_bottom_in = 'SLIDE_BOTTOM_IN';
+        static auto constexpr fade_in         = 'FADE_IN';
+        static auto constexpr scale_up_in     = 'ZOOM_IN';
+        static auto constexpr scale_down_in   = 'DROP_IN';
+        static auto constexpr pop_in          = 'POP_IN';
+
+        static auto constexpr slide_left_out   = 'SLIDE_LEFT_OUT';
+        static auto constexpr slide_right_out  = 'SLIDE_RIGHT_OUT';
+        static auto constexpr slide_top_out    = 'SLIDE_TOP_OUT';
+        static auto constexpr slide_bottom_out = 'SLIDE_BOTTOM_OUT';
+        static auto constexpr fade_out         = 'FADE_OUT';
+        static auto constexpr scale_up_out     = 'ZOOM_OUT';
+        static auto constexpr scale_down_out   = 'DROP_OUT';
+        static auto constexpr pop_out          = 'POP_OUT';
+    };
+
+    struct Schema
+    {
+        static auto constexpr name   = "VideoAnimation";
+        static int constexpr version = 1;
+    };
+
+    using Parent = Effect;
+
+    VideoAnimation(
+        std::string const&   name           = std::string(),
+        std::string const&   animation_type = AnimationType::no_animation,
+        double const&        duration       = 0,
+        double const&        offset         = 0,
+        AnyDictionary const& metadata       = AnyDictionary(),
+        bool                 enabled        = true)
+        : Effect(name, Schema::name, metadata, enabled)
+        , _animation_type(animation_type)
+        , _duration(duration)
+        , _offset(offset)
+    {}
+
+    std::string animation_type() const noexcept { return _animation_type; }
+    void set_animation_type(std::string animation_type) noexcept { _animation_type = animation_type; }
+    double duration() const noexcept { return _duration; }
+    void set_duration(double duration) noexcept { _duration = duration; }
+    double offset() const noexcept { return _offset; }
+    void set_offset(double offset) noexcept { _offset = offset; }
+
+protected:
+    virtual ~VideoAnimation() = default;
+    bool     read_from(Reader&) override;
+    void     write_to(Writer&) const override;
+
+    std::string    _animation_type;
+    double         _duration;
+    double         _offset;
+};
+
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION
