@@ -155,4 +155,34 @@ protected:
     double _temperature;
 };
 
+/// @brief A video opacity effect
+class VideoOpacityEffect : public Effect
+{
+public:
+    struct Schema {
+        static auto constexpr name   = "VideoOpacityEffect";
+        static int constexpr version = 1;
+    };
+    using Parent = Effect;
+
+    VideoOpacityEffect(
+        std::string const&   name        = std::string(),
+        double               opacity     = 0,
+        AnyDictionary const& metadata    = AnyDictionary(),
+        bool                 enabled     = true)
+        : Effect(name, Schema::name, metadata, enabled)
+        , _opacity(opacity)
+    {}
+
+    double opacity() const noexcept { return _opacity; }
+    void set_opacity(double opacity) noexcept { _opacity = opacity; }
+
+protected:
+    virtual ~VideoOpacityEffect() = default;
+    bool read_from(Reader&) override;
+    void write_to(Writer&) const override;
+
+    double _opacity;
+};
+
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION
