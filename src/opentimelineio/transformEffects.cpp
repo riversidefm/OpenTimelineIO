@@ -115,4 +115,19 @@ void VideoMask::write_to(Writer &writer) const {
     }
 }
 
+bool VideoAnimation::read_from(Reader &reader)
+{
+    return reader.read("animation_type", &_animation_type)
+           && reader.read("duration", &_duration)
+           && reader.read("offset", &_offset)
+           && Parent::read_from(reader);
+
+}
+void VideoAnimation::write_to(Writer &writer) const {
+    Parent::write_to(writer);
+    writer.write("animation_type", _animation_type);
+    writer.write("duration", _duration);
+    writer.write("offset", _offset);
+}
+
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION

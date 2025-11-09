@@ -100,6 +100,7 @@ TypeRegistry::TypeRegistry()
     register_type<VideoFlip>();
     register_type<VideoLightness>();
     register_type<VideoMask>();
+    register_type<VideoAnimation>();
     register_type<VideoPosition>();
     register_type<VideoRotate>();
     register_type<VideoRoundedCorners>();

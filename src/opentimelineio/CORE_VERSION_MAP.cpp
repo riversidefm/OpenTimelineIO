@@ -187,6 +187,7 @@ const label_to_schema_version_map CORE_VERSION_MAP{
           { "VideoRoundedCorners", 1 },
           { "VideoSaturation", 1 },
           { "VideoScale", 1 },
+          { "VideoAnimation", 1 },
       } },
     // {next}
 };
