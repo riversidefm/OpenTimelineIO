@@ -1,5 +1,6 @@
 #pragma once
 
+#include "opentime/rationalTime.h"
 #include "opentimelineio/effect.h"
 #include "opentimelineio/version.h"
 
@@ -326,6 +327,73 @@ protected:
     std::string _mask_url;
     std::optional<std::string> _mask_replacement_url;
     std::optional<double> _blur_radius;
+};
+
+class VideoAnimation : public Effect
+{
+public:
+    struct AnimationType
+    {
+        static constexpr const char* no_animation    = "NO_ANIMATION";
+        static constexpr const char* slide_left_in   = "SLIDE_LEFT_IN";
+        static constexpr const char* slide_right_in  = "SLIDE_RIGHT_IN";
+        static constexpr const char* slide_top_in    = "SLIDE_TOP_IN";
+        static constexpr const char* slide_bottom_in = "SLIDE_BOTTOM_IN";
+        static constexpr const char* fade_in         = "FADE_IN";
+        static constexpr const char* scale_up_in     = "ZOOM_IN";
+        static constexpr const char* scale_down_in   = "DROP_IN";
+        static constexpr const char* pop_in          = "POP_IN";
+
+        static constexpr const char* slide_left_out   = "SLIDE_LEFT_OUT";
+        static constexpr const char* slide_right_out  = "SLIDE_RIGHT_OUT";
+        static constexpr const char* slide_top_out    = "SLIDE_TOP_OUT";
+        static constexpr const char* slide_bottom_out = "SLIDE_BOTTOM_OUT";
+        static constexpr const char* fade_out         = "FADE_OUT";
+        static constexpr const char* scale_up_out     = "ZOOM_OUT";
+        static constexpr const char* scale_down_out   = "DROP_OUT";
+        static constexpr const char* pop_out          = "POP_OUT";
+    };
+
+    struct Schema
+    {
+        static auto constexpr name   = "VideoAnimation";
+        static int constexpr version = 1;
+    };
+
+    using Parent       = Effect;
+    using RationalTime = opentime::OPENTIME_VERSION::RationalTime;
+
+    VideoAnimation(
+        std::string const&   name           = std::string(),
+        std::string const&   animation_type = AnimationType::no_animation,
+        RationalTime const&  duration       = RationalTime(0),
+        RationalTime const&  offset         = RationalTime(0),
+        AnyDictionary const& metadata       = AnyDictionary(),
+        bool                 enabled        = true)
+        : Effect(name, Schema::name, metadata, enabled)
+        , _animation_type(animation_type)
+        , _duration(duration)
+        , _offset(offset)
+    {}
+
+    std::string animation_type() const noexcept { return _animation_type; }
+    void        set_animation_type(std::string animation_type) noexcept
+    {
+        _animation_type = animation_type;
+    }
+    RationalTime duration() const noexcept { return _duration; }
+    void set_duration(RationalTime duration) noexcept { _duration = duration; }
+    RationalTime offset() const noexcept { return _offset; }
+    void         set_offset(RationalTime offset) noexcept { _offset = offset; }
+
+protected:
+    virtual ~VideoAnimation() = default;
+    bool read_from(Reader&) override;
+    void write_to(Writer&) const override;
+
+    std::string  _animation_type;
+    RationalTime _duration;
+    RationalTime _offset;
 };
 
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION

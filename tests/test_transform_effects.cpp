@@ -112,6 +112,23 @@ main(int argc, char** argv)
                         "effect_name": "VideoMaskBlur",
                         "blur_radius": 10.1,
                         "enabled": true
+                    },
+                    {
+                        "OTIO_SCHEMA": "VideoAnimation.1",
+                        "name": "animation",
+                        "animation_type": "SLIDE_LEFT_IN",
+                        "duration": {
+                            "OTIO_SCHEMA": "RationalTime.1",
+                            "rate": 24,
+                            "value": 36
+                        },
+                        "offset": {
+                            "OTIO_SCHEMA": "RationalTime.1",
+                            "rate": 24,
+                            "value": 12
+                        },
+                        "effect_name": "VideoAnimation",
+                        "enabled": true
                     }
                 ]
             })",
@@ -124,7 +141,7 @@ main(int argc, char** argv)
         assertNotNull(clip);
 
         auto effects = clip->effects();
-        assertEqual(effects.size(), 9);
+        assertEqual(effects.size(), 10);
 
         auto video_scale = dynamic_cast<const VideoScale*>(effects[0].value);
         assertNotNull(video_scale);
@@ -172,6 +189,12 @@ main(int argc, char** argv)
         assertEqual(video_mask_blur->mask_type(), std::string(VideoMask::MaskType::blur));
         assertEqual(video_mask_blur->mask_url(), std::string("mask_url"));
         assertEqual(video_mask_blur->blur_radius().value(), 10.1);
+
+        auto video_animation = dynamic_cast<const VideoAnimation*>(effects[9].value);
+        assertNotNull(video_animation);
+        assertEqual(video_animation->animation_type(), std::string(VideoAnimation::AnimationType::slide_left_in));
+        assertEqual(video_animation->duration(), otime::RationalTime(36.0, 24.0));
+        assertEqual(video_animation->offset(), otime::RationalTime(12.0, 24.0));
     });
 
     tests.add_test("test_video_transform_write", [] {
@@ -188,11 +211,13 @@ main(int argc, char** argv)
               new otio::VideoCrop("crop", 1, 2, 3, 4),
               new otio::VideoRoundedCorners("roundedCorners",80),
               new otio::VideoFlip("flip", true, false),
-              new otio::VideoMask("mask", otio::VideoMask::MaskType::remove, "mask_url")
+              new otio::VideoMask("mask", otio::VideoMask::MaskType::remove, "mask_url"),
+              new otio::VideoAnimation("animation", otio::VideoAnimation::AnimationType::slide_left_in, otime::RationalTime(36.0, 24.0), otime::RationalTime(12.0, 24.0))
             }));
 
         auto json = clip.value->to_json_string();
 
+		printf("%s\n", json.c_str());
         std::string expected_json = R"({
     "OTIO_SCHEMA": "Clip.2",
     "metadata": {},
@@ -261,6 +286,24 @@ main(int argc, char** argv)
             "enabled": true,
             "mask_type": "REMOVE",
             "mask_url": "mask_url"
+        },
+        {
+            "OTIO_SCHEMA": "VideoAnimation.1",
+            "metadata": {},
+            "name": "animation",
+            "effect_name": "VideoAnimation",
+            "enabled": true,
+            "animation_type": "SLIDE_LEFT_IN",
+            "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 24.0,
+                "value": 36.0
+            },
+            "offset": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 24.0,
+                "value": 12.0
+            }
         }
     ],
     "markers": [],

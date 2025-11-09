@@ -848,6 +848,27 @@ parameters:
 - *metadata*: 
 - *name*: 
 
+### VideoAnimation.1
+
+*full module path*: `opentimelineio.schema.VideoAnimation`
+
+*documentation*:
+
+```
+
+An effect that applies a mask to a video
+
+```
+
+parameters:
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *animation_type*: 
+- *duration*: 
+- *offset*: 
+- *metadata*: 
+- *name*: 
+
 ### VideoPosition.1
 
 *full module path*: `opentimelineio.schema.VideoPosition`
