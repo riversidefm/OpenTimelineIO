@@ -73,6 +73,13 @@ main(int argc, char** argv)
                         "temperature": 6500,
                         "effect_name": "VideoColorTemperature",
                         "enabled": true
+                    },
+                    {
+                        "OTIO_SCHEMA": "VideoOpacity.1",
+                        "name": "opacity",
+                        "opacity": 0.5,
+                        "effect_name": "VideoOpacity",
+                        "enabled": true
                     }
                 ]
             })",
@@ -85,7 +92,7 @@ main(int argc, char** argv)
         assertNotNull(clip);
 
         auto effects = clip->effects();
-        assertEqual(effects.size(), 5);
+        assertEqual(effects.size(), 6);
 
         auto video_brightness = dynamic_cast<const VideoBrightness*>(effects[0].value);
         assertNotNull(video_brightness);
@@ -106,6 +113,10 @@ main(int argc, char** argv)
         auto video_temperature = dynamic_cast<const VideoColorTemperature*>(effects[4].value);
         assertNotNull(video_temperature);
         assertEqual(video_temperature->temperature(), 6500);
+
+        auto video_opacity = dynamic_cast<const VideoOpacity*>(effects[5].value);
+        assertNotNull(video_opacity);
+        assertEqual(video_opacity->opacity(), 0.5);
     });
 
     tests.add_test("test_color_management_effects_write", [] {
@@ -120,10 +131,12 @@ main(int argc, char** argv)
               new otio::VideoContrast("contrast", 20),
               new otio::VideoSaturation("saturation", 70),
               new otio::VideoLightness("lightness", 10),
-              new otio::VideoColorTemperature("temperature", 6500)}));
+              new otio::VideoColorTemperature("temperature", 6500),
+              new otio::VideoOpacity("opacity", 0.5)}));
 
         auto json = clip.value->to_json_string();
 
+		printf("%s\n", json.c_str());
         std::string expected_json = R"({
     "OTIO_SCHEMA": "Clip.2",
     "metadata": {},
@@ -136,7 +149,7 @@ main(int argc, char** argv)
             "name": "brightness",
             "effect_name": "VideoBrightness",
             "enabled": true,
-            "brightness": 50
+            "brightness": 50.0
         },
         {
             "OTIO_SCHEMA": "VideoContrast.1",
@@ -144,7 +157,7 @@ main(int argc, char** argv)
             "name": "contrast",
             "effect_name": "VideoContrast",
             "enabled": true,
-            "contrast": 20
+            "contrast": 20.0
         },
         {
             "OTIO_SCHEMA": "VideoSaturation.1",
@@ -152,7 +165,7 @@ main(int argc, char** argv)
             "name": "saturation",
             "effect_name": "VideoSaturation",
             "enabled": true,
-            "saturation": 70
+            "saturation": 70.0
         },
         {
             "OTIO_SCHEMA": "VideoLightness.1",
@@ -160,7 +173,7 @@ main(int argc, char** argv)
             "name": "lightness",
             "effect_name": "VideoLightness",
             "enabled": true,
-            "lightness": 10
+            "lightness": 10.0
         },
         {
             "OTIO_SCHEMA": "VideoColorTemperature.1",
@@ -168,7 +181,15 @@ main(int argc, char** argv)
             "name": "temperature",
             "effect_name": "VideoColorTemperature",
             "enabled": true,
-            "temperature": 6500
+            "temperature": 6500.0
+        },
+        {
+            "OTIO_SCHEMA": "VideoOpacity.1",
+            "metadata": {},
+            "name": "opacity",
+            "effect_name": "VideoOpacity",
+            "enabled": true,
+            "opacity": 0.5
         }
     ],
     "markers": [],

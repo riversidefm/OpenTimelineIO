@@ -57,13 +57,13 @@ void VideoColorTemperature::write_to(Writer &writer) const {
     writer.write("temperature", _temperature);
 }
 
-bool VideoOpacityEffect::read_from(Reader &reader)
+bool VideoOpacity::read_from(Reader &reader)
 {
     return reader.read("opacity", &_opacity)
            && Parent::read_from(reader);
 }
 
-void VideoOpacityEffect::write_to(Writer &writer) const {
+void VideoOpacity::write_to(Writer &writer) const {
     Parent::write_to(writer);
     writer.write("opacity", _opacity);
 }

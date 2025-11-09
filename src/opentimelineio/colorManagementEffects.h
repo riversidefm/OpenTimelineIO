@@ -156,16 +156,16 @@ protected:
 };
 
 /// @brief A video opacity effect
-class VideoOpacityEffect : public Effect
+class VideoOpacity : public Effect
 {
 public:
     struct Schema {
-        static auto constexpr name   = "VideoOpacityEffect";
+        static auto constexpr name   = "VideoOpacity";
         static int constexpr version = 1;
     };
     using Parent = Effect;
 
-    VideoOpacityEffect(
+    VideoOpacity(
         std::string const&   name        = std::string(),
         double               opacity     = 0,
         AnyDictionary const& metadata    = AnyDictionary(),
@@ -178,7 +178,7 @@ public:
     void set_opacity(double opacity) noexcept { _opacity = opacity; }
 
 protected:
-    virtual ~VideoOpacityEffect() = default;
+    virtual ~VideoOpacity() = default;
     bool read_from(Reader&) override;
     void write_to(Writer&) const override;
 

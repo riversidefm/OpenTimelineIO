@@ -188,6 +188,7 @@ const label_to_schema_version_map CORE_VERSION_MAP{
           { "VideoSaturation", 1 },
           { "VideoScale", 1 },
           { "VideoAnimation", 1 },
+          { "VideoOpacity", 1 },
       } },
     // {next}
 };

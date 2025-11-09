@@ -93,6 +93,7 @@ TypeRegistry::TypeRegistry()
     register_type<Track>();
     register_type_from_existing_type("Sequence", 1, "Track", nullptr);
 
+    register_type<VideoAnimation>();
     register_type<VideoBrightness>();
     register_type<VideoColorTemperature>();
     register_type<VideoContrast>();
@@ -100,7 +101,7 @@ TypeRegistry::TypeRegistry()
     register_type<VideoFlip>();
     register_type<VideoLightness>();
     register_type<VideoMask>();
-    register_type<VideoAnimation>();
+    register_type<VideoOpacity>();
     register_type<VideoPosition>();
     register_type<VideoRotate>();
     register_type<VideoRoundedCorners>();

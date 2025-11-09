@@ -848,6 +848,25 @@ parameters:
 - *metadata*: 
 - *name*: 
 
+### VideoOpacity.1
+
+*full module path*: `opentimelineio.schema.VideoAnimation`
+
+*documentation*:
+
+```
+
+An effect that applies a mask to a video
+
+```
+
+parameters:
+- *effect_name*: 
+- *enabled*: If true, the Effect is applied. If false, the Effect is omitted.
+- *opacity*: 
+- *metadata*: 
+- *name*: 
+
 ### VideoAnimation.1
 
 *full module path*: `opentimelineio.schema.VideoAnimation`
